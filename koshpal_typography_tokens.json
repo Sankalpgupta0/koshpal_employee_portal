@@ -1,0 +1,464 @@
+{
+  "name": "Koshpal Typography Tokens - Responsive (Outfit primary, Plus Jakarta Sans secondary)",
+  "created": "2025-10-14T18:36:22.700382Z",
+  "description": "Semantic, responsive typography tokens for Koshpal dashboard. Desktop → Tablet → Mobile scales. Use Outfit for headings and Plus Jakarta Sans for body/UI text. Inspired by Apple spacing and weight rhythm.",
+  "breakpoints": {
+    "desktop": 1440,
+    "tablet": 1024,
+    "mobile": 375
+  },
+  "fonts": {
+    "primary": {
+      "family": "Outfit",
+      "weights": [
+        300,
+        400,
+        500,
+        600,
+        700,
+        800
+      ],
+      "usage": "Headings, display, emphasis, numeric"
+    },
+    "secondary": {
+      "family": "Plus Jakarta Sans",
+      "weights": [
+        300,
+        400,
+        500,
+        600,
+        700
+      ],
+      "usage": "Body, labels, UI elements, microcopy"
+    }
+  },
+  "tokens": {
+    "desktop": {
+      "display-xl": {
+        "fontFamily": "Outfit",
+        "fontWeight": 700,
+        "fontSize": 56,
+        "lineHeight": 72,
+        "letterSpacing": -0.02,
+        "paragraphSpacing": 10
+      },
+      "display-lg": {
+        "fontFamily": "Outfit",
+        "fontWeight": 700,
+        "fontSize": 40,
+        "lineHeight": 52,
+        "letterSpacing": -0.01,
+        "paragraphSpacing": 8
+      },
+      "h1": {
+        "fontFamily": "Outfit",
+        "fontWeight": 700,
+        "fontSize": 32,
+        "lineHeight": 40,
+        "letterSpacing": -0.01,
+        "paragraphSpacing": 8
+      },
+      "h2": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 28,
+        "lineHeight": 36,
+        "letterSpacing": 0,
+        "paragraphSpacing": 6
+      },
+      "h3": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 22,
+        "lineHeight": 30,
+        "letterSpacing": 0,
+        "paragraphSpacing": 6
+      },
+      "h4": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 18,
+        "lineHeight": 26,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 4
+      },
+      "h5": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 4
+      },
+      "h6": {
+        "fontFamily": "Outfit",
+        "fontWeight": 500,
+        "fontSize": 14,
+        "lineHeight": 20,
+        "letterSpacing": 0.02,
+        "paragraphSpacing": 4
+      },
+      "subtitle": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 600,
+        "fontSize": 14,
+        "lineHeight": 20,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 4
+      },
+      "body-lg": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 400,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 8
+      },
+      "body-md": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 400,
+        "fontSize": 14,
+        "lineHeight": 20,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 6
+      },
+      "body-sm": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 400,
+        "fontSize": 12,
+        "lineHeight": 18,
+        "letterSpacing": 0.02,
+        "paragraphSpacing": 6
+      },
+      "button": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 600,
+        "fontSize": 14,
+        "lineHeight": 20,
+        "letterSpacing": 0.06,
+        "textTransform": "none",
+        "paragraphSpacing": 0
+      },
+      "label": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 600,
+        "fontSize": 12,
+        "lineHeight": 16,
+        "letterSpacing": 0.04,
+        "paragraphSpacing": 0
+      },
+      "caption": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 400,
+        "fontSize": 11,
+        "lineHeight": 16,
+        "letterSpacing": 0.02,
+        "paragraphSpacing": 0
+      },
+      "overline": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 600,
+        "fontSize": 10,
+        "lineHeight": 12,
+        "letterSpacing": 0.12,
+        "textTransform": "uppercase",
+        "paragraphSpacing": 0
+      },
+      "mono-numeric": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "letterSpacing": 0,
+        "paragraphSpacing": 0,
+        "fontFeatures": "tabular-nums"
+      }
+    },
+    "tablet": {
+      "display-xl": {
+        "fontFamily": "Outfit",
+        "fontWeight": 700,
+        "fontSize": 48,
+        "lineHeight": 60,
+        "letterSpacing": -0.02,
+        "paragraphSpacing": 10
+      },
+      "display-lg": {
+        "fontFamily": "Outfit",
+        "fontWeight": 700,
+        "fontSize": 36,
+        "lineHeight": 44,
+        "letterSpacing": -0.01,
+        "paragraphSpacing": 8
+      },
+      "h1": {
+        "fontFamily": "Outfit",
+        "fontWeight": 700,
+        "fontSize": 28,
+        "lineHeight": 36,
+        "letterSpacing": -0.01,
+        "paragraphSpacing": 8
+      },
+      "h2": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 24,
+        "lineHeight": 32,
+        "letterSpacing": 0,
+        "paragraphSpacing": 6
+      },
+      "h3": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 20,
+        "lineHeight": 28,
+        "letterSpacing": 0,
+        "paragraphSpacing": 6
+      },
+      "h4": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 16,
+        "lineHeight": 24,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 4
+      },
+      "h5": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 15,
+        "lineHeight": 22,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 4
+      },
+      "h6": {
+        "fontFamily": "Outfit",
+        "fontWeight": 500,
+        "fontSize": 13,
+        "lineHeight": 18,
+        "letterSpacing": 0.02,
+        "paragraphSpacing": 4
+      },
+      "subtitle": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 600,
+        "fontSize": 13,
+        "lineHeight": 18,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 4
+      },
+      "body-lg": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 400,
+        "fontSize": 15,
+        "lineHeight": 22,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 8
+      },
+      "body-md": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 400,
+        "fontSize": 14,
+        "lineHeight": 20,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 6
+      },
+      "body-sm": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 400,
+        "fontSize": 12,
+        "lineHeight": 18,
+        "letterSpacing": 0.02,
+        "paragraphSpacing": 6
+      },
+      "button": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 600,
+        "fontSize": 13,
+        "lineHeight": 18,
+        "letterSpacing": 0.06,
+        "textTransform": "none",
+        "paragraphSpacing": 0
+      },
+      "label": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 600,
+        "fontSize": 11,
+        "lineHeight": 16,
+        "letterSpacing": 0.04,
+        "paragraphSpacing": 0
+      },
+      "caption": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 400,
+        "fontSize": 11,
+        "lineHeight": 16,
+        "letterSpacing": 0.02,
+        "paragraphSpacing": 0
+      },
+      "overline": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 600,
+        "fontSize": 9,
+        "lineHeight": 12,
+        "letterSpacing": 0.12,
+        "textTransform": "uppercase",
+        "paragraphSpacing": 0
+      },
+      "mono-numeric": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 15,
+        "lineHeight": 22,
+        "letterSpacing": 0,
+        "paragraphSpacing": 0,
+        "fontFeatures": "tabular-nums"
+      }
+    },
+    "mobile": {
+      "display-xl": {
+        "fontFamily": "Outfit",
+        "fontWeight": 700,
+        "fontSize": 34,
+        "lineHeight": 40,
+        "letterSpacing": -0.01,
+        "paragraphSpacing": 8
+      },
+      "display-lg": {
+        "fontFamily": "Outfit",
+        "fontWeight": 700,
+        "fontSize": 28,
+        "lineHeight": 34,
+        "letterSpacing": -0.01,
+        "paragraphSpacing": 6
+      },
+      "h1": {
+        "fontFamily": "Outfit",
+        "fontWeight": 700,
+        "fontSize": 22,
+        "lineHeight": 28,
+        "letterSpacing": 0,
+        "paragraphSpacing": 6
+      },
+      "h2": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 20,
+        "lineHeight": 26,
+        "letterSpacing": 0,
+        "paragraphSpacing": 6
+      },
+      "h3": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 18,
+        "lineHeight": 24,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 4
+      },
+      "h4": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 16,
+        "lineHeight": 22,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 4
+      },
+      "h5": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 14,
+        "lineHeight": 20,
+        "letterSpacing": 0.02,
+        "paragraphSpacing": 4
+      },
+      "h6": {
+        "fontFamily": "Outfit",
+        "fontWeight": 500,
+        "fontSize": 13,
+        "lineHeight": 18,
+        "letterSpacing": 0.02,
+        "paragraphSpacing": 4
+      },
+      "subtitle": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 600,
+        "fontSize": 13,
+        "lineHeight": 18,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 4
+      },
+      "body-lg": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 400,
+        "fontSize": 15,
+        "lineHeight": 22,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 8
+      },
+      "body-md": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 400,
+        "fontSize": 14,
+        "lineHeight": 20,
+        "letterSpacing": 0.01,
+        "paragraphSpacing": 6
+      },
+      "body-sm": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 400,
+        "fontSize": 12,
+        "lineHeight": 18,
+        "letterSpacing": 0.02,
+        "paragraphSpacing": 6
+      },
+      "button": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 600,
+        "fontSize": 14,
+        "lineHeight": 20,
+        "letterSpacing": 0.06,
+        "textTransform": "none",
+        "paragraphSpacing": 0
+      },
+      "label": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 600,
+        "fontSize": 12,
+        "lineHeight": 16,
+        "letterSpacing": 0.04,
+        "paragraphSpacing": 0
+      },
+      "caption": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 400,
+        "fontSize": 11,
+        "lineHeight": 16,
+        "letterSpacing": 0.02,
+        "paragraphSpacing": 0
+      },
+      "overline": {
+        "fontFamily": "Plus Jakarta Sans",
+        "fontWeight": 600,
+        "fontSize": 9,
+        "lineHeight": 12,
+        "letterSpacing": 0.12,
+        "textTransform": "uppercase",
+        "paragraphSpacing": 0
+      },
+      "mono-numeric": {
+        "fontFamily": "Outfit",
+        "fontWeight": 600,
+        "fontSize": 14,
+        "lineHeight": 20,
+        "letterSpacing": 0,
+        "paragraphSpacing": 0,
+        "fontFeatures": "tabular-nums"
+      }
+    }
+  },
+  "notes": {
+    "design_rationale": "Outfit is used for headings for its geometric clarity and strong numeric forms; Plus Jakarta Sans is used for body for its legibility at small sizes. Line-heights are generous (Apple-inspired) to create calm, readable dashboards. Use token 'mono-numeric' for tables and financial values to ensure alignment. Letter spacing units are decimal em-ish values; Figma stores letter spacing in px — adapt as needed.",
+    "figma_import_tip": "To import into Figma Tokens plugin, map keys under appropriate token set (desktop/tablet/mobile). For implementation in CSS, convert fontSize and lineHeight to rems (divide px by 16)."
+  }
+}

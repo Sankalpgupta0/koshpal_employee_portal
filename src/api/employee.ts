@@ -1,0 +1,135 @@
+import { axiosInstance } from './axiosInstance';
+
+export interface Employee {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  profilePicture?: string;
+  companyId: string;
+  department?: string;
+  salary?: number;
+  budget?: number;
+  dateJoined?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  message: string;
+  employee: Employee;
+  token: string;
+}
+
+export interface CreateEmployeeRequest {
+  companyId: string;
+  name?: string;
+  email: string;
+  phone?: string;
+  password: string;
+  salary?: number;
+  budget?: number;
+  department?: string;
+  dateJoined?: string;
+}
+
+export interface UpdateEmployeeRequest {
+  name?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+  salary?: number;
+  budget?: number;
+  department?: string;
+  spendSummary?: {
+    totalSpend?: number;
+    categories?: Record<string, number>;
+  };
+}
+
+// ==================== Employee API ====================
+
+/**
+ * Employee login
+ */
+export const loginEmployee = async (credentials: LoginRequest): Promise<LoginResponse> => {
+  try {
+    const response = await axiosInstance.post('/auth/login', credentials);
+    // Map backend response to frontend format
+    const { accessToken, user } = response.data;
+    
+    console.log('Login response:', response.data);
+    
+    return {
+      message: 'Login successful',
+      employee: {
+        _id: user.id,
+        name: user.name || user.email,
+        email: user.email,
+        companyId: user.companyId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      token: accessToken,
+    };
+  } catch (error) {
+    console.error('Login API error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Create new employee
+ */
+export const createEmployee = async (data: CreateEmployeeRequest) => {
+  const response = await axiosInstance.post('/employee', data);
+  return response.data;
+};
+
+/**
+ * Get all employees (with pagination)
+ */
+export const getEmployees = async (companyId: string, page = 1, limit = 10) => {
+  const response = await axiosInstance.get('/employee', {
+    params: { page, limit },
+    data: { companyId },
+  });
+  return response.data;
+};
+
+/**
+ * Get employee by ID (use auth/me for current user)
+ */
+export const getEmployeeById = async (employeeId: string): Promise<Employee> => {
+  const response = await axiosInstance.get('/auth/me');
+  const user = response.data;
+  return {
+    _id: user.userId,
+    name: user.email,
+    email: user.email,
+    companyId: user.companyId || '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+};
+
+/**
+ * Update employee details
+ */
+export const updateEmployee = async (employeeId: string, updates: UpdateEmployeeRequest) => {
+  const response = await axiosInstance.put(`/employee/${employeeId}`, updates);
+  return response.data;
+};
+
+/**
+ * Delete employee
+ */
+export const deleteEmployee = async (employeeId: string) => {
+  const response = await axiosInstance.delete(`/employee/${employeeId}`);
+  return response.data;
+};
