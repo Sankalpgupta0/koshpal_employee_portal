@@ -27,7 +27,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
     { icon: Home, label: 'Dashboard', path: '/dashboard', badge: null },
     { icon: BookOpen, label: 'Resources', path: '/resources', badge: null },
     { icon: Users, label: 'Sessions', path: '/sessions', badge: null },
-    { icon: Calendar, label: 'Calendar', path: '/calendar', badge: 5 },
+    { icon: Calendar, label: 'Calendar', path: '/calendar', badge: null },
     { icon: TrendingUp, label: 'My Finances', path: '/finances', badge: null },
     { icon: Settings, label: 'Settings', path: '/settings', badge: null },
   ]

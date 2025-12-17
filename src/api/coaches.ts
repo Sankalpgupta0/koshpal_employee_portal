@@ -23,6 +23,40 @@ export interface CoachSlot {
   status: 'AVAILABLE' | 'BOOKED' | 'CANCELLED';
 }
 
+export interface Consultation {
+  id: string;
+  meetingLink: string;
+  status: 'CONFIRMED' | 'CANCELLED';
+  bookedAt: string;
+  slot: {
+    id: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    status: 'AVAILABLE' | 'BOOKED' | 'CANCELLED';
+  };
+  coach: {
+    id: string;
+    email: string;
+    fullName: string;
+    expertise: string[];
+    rating: number;
+    location: string;
+    profilePhoto?: string;
+  };
+}
+
+export interface ConsultationStats {
+  total: number;
+  past: number;
+  upcoming: number;
+  thisWeek: number;
+  thisMonth: number;
+  minutesBooked: number;
+  confirmed: number;
+  cancelled: number;
+}
+
 /**
  * Get all available coaches
  * GET /api/v1/employee/coaches
@@ -52,5 +86,35 @@ export const bookConsultation = async (data: {
   notes?: string;
 }): Promise<{ success: boolean; message: string }> => {
   const response = await axiosInstance.post('/employee/consultations/book', data);
+  return response.data;
+};
+
+/**
+ * Get employee's consultations with optional filter
+ * GET /api/v1/employee/consultations
+ * @param filter - Optional filter: 'past' | 'upcoming' | 'thisWeek' | 'thisMonth'
+ */
+export const getMyConsultations = async (filter?: string): Promise<Consultation[]> => {
+  const response = await axiosInstance.get('/employee/consultations', {
+    params: filter ? { filter } : {},
+  });
+  return response.data;
+};
+
+/**
+ * Get employee's consultation statistics
+ * GET /api/v1/employee/consultations/stats
+ */
+export const getMyConsultationStats = async (): Promise<ConsultationStats> => {
+  const response = await axiosInstance.get('/employee/consultations/stats');
+  return response.data;
+};
+
+/**
+ * Get employee's latest consultation
+ * GET /api/v1/employee/consultations/latest
+ */
+export const getMyLatestConsultation = async (): Promise<Consultation | null> => {
+  const response = await axiosInstance.get('/employee/consultations/latest');
   return response.data;
 };
