@@ -9,6 +9,7 @@ import FinancialGoals from '../components/FinancialGoals'
 import RecentTransactions from '../components/RecentTransactions'
 import EditBudgetModal from '../components/EditBudgetModal'
 import { getLatestMonthlySummary, getSpendingTrends, updateBudget } from '../api/insights'
+import { getEmployeeLatestConsultation } from '../api/employee'
 
 const Dashboard = () => {
   const [isDarkMode, setIsDarkMode] = useState(false)
@@ -25,6 +26,8 @@ const Dashboard = () => {
   const [user, setUser] = useState<any>({})
   const [loading, setLoading] = useState(true)
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [latestConsultation, setLatestConsultation] = useState<any>(null)
   const hasFetched = useRef(false)
 
   // Initialize dark mode
@@ -84,13 +87,18 @@ const Dashboard = () => {
         setUser(localUser)
         
         // Fetch latest monthly summary and trends data
-        const [summaryResponse, trendsResponse] = await Promise.all([
+        const [summaryResponse, trendsResponse, latestConsultationResponse] = await Promise.all([
           getLatestMonthlySummary(),
-          getSpendingTrends(6)
+          getSpendingTrends(6),
+          getEmployeeLatestConsultation()
         ])
+
         
         console.log('Latest Monthly Summary:', summaryResponse)
         console.log('Spending Trends:', trendsResponse)
+        console.log('Latest Consultation:', latestConsultationResponse)
+
+        setLatestConsultation(latestConsultationResponse || null)
         
         setMonthlySummary(summaryResponse || null)
         setTrendsData(trendsResponse || null)
@@ -278,9 +286,11 @@ const Dashboard = () => {
           </div>
 
           {/* Your Session Section */}
-          <div className="mb-8">
-            <YourSession />
+          {
+            latestConsultation && <div className="mb-8">
+            <YourSession sessionDetails={latestConsultation}/>
           </div>
+          }
 
           {/* Charts Section - Responsive Layout */}
           <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">

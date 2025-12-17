@@ -248,7 +248,7 @@ const BookingModal = ({
                     <label className="block text-sm font-semibold mb-2 sm:mb-3" style={{ color: 'var(--color-text-primary)' }}>
                       Available Time Slots
                     </label>
-                    <div className="space-y-1.5 sm:space-y-2 max-h-[250px] overflow-y-auto">
+                    <div className="space-y-1.5 sm:space-y-2 max-h-[300px] overflow-y-auto">
                       {timeSlots.map((time) => (
                         <button
                           key={time}

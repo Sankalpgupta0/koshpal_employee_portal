@@ -8,6 +8,7 @@ import ViewDetailsModal from '../components/ViewDetailsModal'
 import TipsModal from '../components/TipsModal'
 import { getCoaches, getCoachSlots, bookConsultation } from '../api/coaches'
 import type { Coach, CoachSlot } from '../api/coaches'
+import { getEmployeeLatestConsultation } from '../api/employee'
 
 interface Advisor {
   id: string
@@ -55,6 +56,7 @@ const Sessions = () => {
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [datesWithSlots, setDatesWithSlots] = useState<Set<string>>(new Set())
   const hasFetched = useRef(false)
+  const [latestConsultation, setLatestConsultation] = useState<any>(null)
 
   // Default time slots (used when no slots are loaded yet)
 
@@ -86,6 +88,10 @@ const Sessions = () => {
           nextAvailable: 'View Calendar',
           availabilityStatus: 'available' as const,
         }))
+
+        const latestConsultationResponse = await getEmployeeLatestConsultation();
+        console.log(latestConsultationResponse);
+        setLatestConsultation(latestConsultationResponse);
         
         setAdvisors(transformedAdvisors)
       } catch (error) {
@@ -123,7 +129,6 @@ const Sessions = () => {
                 .catch(() => {})
             )
           }
-          
           await Promise.all(promises)
           setDatesWithSlots(datesSet)
         } catch (error) {
@@ -433,21 +438,6 @@ const Sessions = () => {
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
 
-            {/* <div className="w-px h-8" style={{ backgroundColor: 'var(--color-border-primary)' }}></div> */}
-
-            {/* Book Session Button */}
-            {/* <button
-              onClick={() => handleBookSession(advisors[0])}
-              className="px-6 py-2.5 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
-              style={{
-                backgroundColor: 'var(--color-primary)',
-                color: 'var(--color-text-inverse)',
-                boxShadow: '0px 4px 16px rgba(51, 78, 172, 0.30)',
-              }}
-            >
-              Book Session
-              <ArrowUpRight className="w-4 h-4" />
-            </button> */}
           </div>
         </header>
 
@@ -479,7 +469,10 @@ const Sessions = () => {
             </div>
 
             {/* Your Session Card */}
-            <YourSession />
+            {
+              latestConsultation && <YourSession sessionDetails={latestConsultation} />
+            }
+            
 
             {/* Advisors Grid */}
             {loading ? (

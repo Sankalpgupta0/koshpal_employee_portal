@@ -52,6 +52,13 @@ export interface UpdateEmployeeRequest {
   };
 }
 
+// get emp latest consulatation
+// get - api/v1/employee/consultations/latest
+export const getEmployeeLatestConsultation = async () => {
+  const response = await axiosInstance.get('/employee/consultations/latest');
+  return response.data;
+};
+
 // ==================== Employee API ====================
 
 /**
