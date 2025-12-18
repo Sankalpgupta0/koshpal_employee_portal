@@ -94,7 +94,7 @@ const Dashboard = () => {
         ])
 
         
-        console.log('Latest Monthly Summary:', summaryResponse)
+        console.log('this Monthly Summary:', summaryResponse)
         console.log('Spending Trends:', trendsResponse)
         console.log('Latest Consultation:', latestConsultationResponse)
 
@@ -117,7 +117,7 @@ const Dashboard = () => {
   const totalExpense = monthlySummary?.totalExpense || 0
   const savings = monthlySummary?.savings || 0
   const budget = monthlySummary?.budget || 0
-  const categoryBreakdown = monthlySummary?.categoryBreakdown || {}
+  const categoryBreakdown = monthlySummary?.categoryBreakdown.expense || {}
 
   // Prepare chart data from last 6 months trends
   const chartData = trendsData?.trends?.map((trend: any) => ({
