@@ -37,6 +37,7 @@ export interface CoachWithSlots {
 export interface Consultation {
   id: string;
   meetingLink: string;
+  notes?: string;
   status: 'CONFIRMED' | 'CANCELLED';
   bookedAt: string;
   slot: {
@@ -51,11 +52,16 @@ export interface Consultation {
     email: string;
     fullName: string;
     expertise: string[];
+    bio?: string;
     rating: number;
+    successRate?: number;
+    clientsHelped?: number;
     location: string;
+    languages?: string[];
     profilePhoto?: string;
   };
 }
+
 
 export interface ConsultationStats {
   total: number;
@@ -150,5 +156,14 @@ export const getMyConsultationStats = async (): Promise<ConsultationStats> => {
  */
 export const getMyLatestConsultation = async (): Promise<Consultation | null> => {
   const response = await axiosInstance.get('/employee/consultations/latest');
+  return response.data;
+};
+
+/**
+ * Get consultation details by ID
+ * GET /api/v1/employee/consultations/:id
+ */
+export const getConsultationDetails = async (id: string): Promise<Consultation> => {
+  const response = await axiosInstance.get(`/employee/consultations/${id}`);
   return response.data;
 };

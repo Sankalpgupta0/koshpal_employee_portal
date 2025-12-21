@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Bell, ArrowUpRight, Clock, MapPin, Users, TrendingUp, Star, Languages, Menu } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { ArrowUpRight, MapPin, Users, TrendingUp, Star, Languages, Menu } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import YourSession from '../components/YourSession'
 import BookingModal from '../components/BookingModal'
 import ViewDetailsModal from '../components/ViewDetailsModal'
 import TipsModal from '../components/TipsModal'
-import { getCoaches, getCoachSlots, getAllCoachSlots, bookConsultation } from '../api/coaches'
-import type { Coach, CoachSlot, CoachWithSlots } from '../api/coaches'
+import { getCoaches, getAllCoachSlots, bookConsultation } from '../api/coaches'
+import type { Coach, CoachSlot, Consultation } from '../api/coaches'
 import { getEmployeeLatestConsultation } from '../api/employee'
 
 interface Advisor {
@@ -27,6 +27,7 @@ interface Advisor {
 
 const Sessions = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
@@ -50,6 +51,7 @@ const Sessions = () => {
     employee: string
     meetingLink?: string
   } | null>(null)
+  const [consultationData, setConsultationData] = useState<Consultation | null>(null)
   const [isTipsModalOpen, setIsTipsModalOpen] = useState(false)
   const [advisors, setAdvisors] = useState<Advisor[]>([])
   const [loading, setLoading] = useState(true)
@@ -58,6 +60,21 @@ const Sessions = () => {
   const [datesWithSlots, setDatesWithSlots] = useState<Set<string>>(new Set())
   const hasFetched = useRef(false)
   const [latestConsultation, setLatestConsultation] = useState<any>(null)
+
+  // Handle navigation from YourSession component
+  useEffect(() => {
+    if (location.state?.openViewDetails) {
+      if (location.state?.consultationData) {
+        setConsultationData(location.state.consultationData);
+        setIsViewDetailsOpen(true);
+      } else {
+        setConsultationData(null);
+        setIsViewDetailsOpen(true);
+      }
+      // Clear the state to avoid reopening on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   // Default time slots (used when no slots are loaded yet)
 
@@ -91,7 +108,7 @@ const Sessions = () => {
         }))
 
         const latestConsultationResponse = await getEmployeeLatestConsultation();
-        console.log(latestConsultationResponse);
+        console.log("latest Consultation : " , latestConsultationResponse);
         setLatestConsultation(latestConsultationResponse);
         
         setAdvisors(transformedAdvisors)
@@ -367,6 +384,7 @@ const Sessions = () => {
 
   const handleCloseViewDetails = () => {
     setIsViewDetailsOpen(false)
+    setConsultationData(null)
   }
 
   const formatDate = (date: Date | null) => {
@@ -809,9 +827,16 @@ const Sessions = () => {
         renderCalendar={renderCalendar}
       />
 
+      {/* Fallback UI for blank page issue */}
+      {isViewDetailsOpen && !consultationData && (
+        <div style={{ padding: 32, textAlign: 'center', color: 'red' }}>
+          Could not load session details.
+        </div>
+      )}
       <ViewDetailsModal
         isOpen={isViewDetailsOpen}
         bookedSession={bookedSession}
+        consultationData={consultationData}
         onClose={handleCloseViewDetails}
         formatDate={formatDate}
       />

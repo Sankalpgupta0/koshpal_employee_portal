@@ -23,9 +23,38 @@ interface BookedSession {
   employee: string
 }
 
+interface ConsultationData {
+  id: string
+  meetingLink: string
+  notes?: string
+  status: 'CONFIRMED' | 'CANCELLED'
+  bookedAt: string
+  slot: {
+    id: string
+    date: string
+    startTime: string
+    endTime: string
+    status: 'AVAILABLE' | 'BOOKED' | 'CANCELLED'
+  }
+  coach: {
+    id: string
+    email: string
+    fullName: string
+    expertise: string[]
+    bio?: string
+    rating: number
+    successRate?: number
+    clientsHelped?: number
+    location: string
+    languages?: string[]
+    profilePhoto?: string
+  }
+}
+
 interface ViewDetailsModalProps {
   isOpen: boolean
-  bookedSession: BookedSession | null
+  bookedSession?: BookedSession | null
+  consultationData?: ConsultationData | null
   onClose: () => void
   formatDate: (date: Date | null) => string
 }
@@ -33,14 +62,65 @@ interface ViewDetailsModalProps {
 const ViewDetailsModal = ({
   isOpen,
   bookedSession,
+  consultationData,
   onClose,
   formatDate,
 }: ViewDetailsModalProps) => {
-  if (!isOpen || !bookedSession) return null
+  if (!isOpen || (!bookedSession && !consultationData)) return null
+
+  // Convert consultationData to bookedSession format if present
+  const displaySession = consultationData
+    ? {
+        advisor: {
+          id: consultationData.coach.id,
+          name: consultationData.coach.fullName,
+          image: consultationData.coach.profilePhoto || '/placeholder-avatar.jpg',
+          rating: consultationData.coach.rating || 0,
+          credentials: consultationData.coach.expertise +", " || 'Financial Coach',
+          successRate: consultationData.coach.successRate
+            ? `${consultationData.coach.successRate}%`
+            : '95%',
+          clientsHelped: consultationData.coach.clientsHelped || 0,
+          location: consultationData.coach.location || 'Remote',
+          languages: consultationData.coach.languages || ['English'],
+          specialties: consultationData.coach.expertise.map((exp, idx) => ({
+            name: exp,
+            color: ['secondary', 'warning', 'primary', 'info'][idx % 4],
+          })),
+          nextAvailable: 'View Calendar',
+          availabilityStatus: 'available' as const,
+        },
+        date: new Date(consultationData.slot.date),
+        time: new Date(consultationData.slot.startTime).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        }),
+        notes: consultationData.notes || '',
+        employee: 'You',
+        meetingLink: consultationData.meetingLink,
+      }
+    : bookedSession || undefined;
+
+  if (!displaySession || !displaySession.advisor) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-90">
+        <div className="p-8 text-center border shadow-xl rounded-xl">
+          <h2 className="mb-2 text-lg font-bold">Could not load session details.</h2>
+          <button
+            onClick={onClose}
+            className="mt-4 px-6 py-2.5 rounded-lg font-semibold text-sm bg-primary text-white"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
-      className="fixed inset-0 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-8 sm:pt-12 md:pt-16"
+      className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-8 backdrop-blur-md sm:pt-12 md:pt-16"
       onClick={onClose}
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.15)' }}
     >
@@ -49,7 +129,7 @@ const ViewDetailsModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div 
-          className="rounded-2xl shadow-2xl overflow-hidden"
+          className="overflow-hidden shadow-2xl rounded-2xl"
           style={{ 
             backgroundColor: 'var(--color-bg-card)',
             border: '1px solid var(--color-border-primary)'
@@ -57,14 +137,14 @@ const ViewDetailsModal = ({
         >
           {/* Modal Header */}
           <div 
-            className="px-4 sm:px-5 py-3 sm:py-4 border-b flex items-center justify-between"
+            className="flex items-center justify-between px-4 py-3 border-b sm:px-5 sm:py-4"
             style={{ 
               backgroundColor: 'var(--color-bg-card)',
               borderColor: 'var(--color-border-primary)'
             }}
           >
             <h2 
-              className="text-base sm:text-lg font-bold"
+              className="text-base font-bold sm:text-lg"
               style={{ color: 'var(--color-text-primary)' }}
             >
               Session Details
@@ -82,7 +162,7 @@ const ViewDetailsModal = ({
           </div>
 
           {/* Modal Content */}
-          <div className="px-4 sm:px-5 py-4 sm:py-5 space-y-4">
+          <div className="px-4 py-4 space-y-4 sm:px-5 sm:py-5">
             {/* Status Badge */}
             <div className="flex justify-center">
               <div 
@@ -98,7 +178,7 @@ const ViewDetailsModal = ({
             </div>
 
             {/* Session Info Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div 
                 className="p-3 rounded-xl"
                 style={{ 
@@ -113,7 +193,7 @@ const ViewDetailsModal = ({
                   </span>
                 </div>
                 <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                  {formatDate(bookedSession.date)}
+                  {formatDate(displaySession.date)}
                 </p>
               </div>
 
@@ -131,14 +211,14 @@ const ViewDetailsModal = ({
                   </span>
                 </div>
                 <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                  {bookedSession.time}
+                  {displaySession.time}
                 </p>
               </div>
             </div>
 
             {/* Participant Details */}
             <div 
-              className="p-4 rounded-xl space-y-3"
+              className="p-4 space-y-3 rounded-xl"
               style={{ 
                 backgroundColor: 'var(--color-bg-tertiary)',
                 border: '1px solid var(--color-border-primary)'
@@ -146,14 +226,14 @@ const ViewDetailsModal = ({
             >
               <div className="flex items-start gap-3">
                 <img
-                  src={bookedSession.advisor.image}
-                  alt={bookedSession.advisor.name}
-                  className="w-12 h-12 rounded-full object-cover"
+                  src={displaySession.advisor.image}
+                  alt={displaySession.advisor.name}
+                  className="object-cover w-12 h-12 rounded-full"
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <h4 className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                      {bookedSession.advisor.name}
+                    {displaySession.advisor.name}
                     </h4>
                     <span 
                       className="text-xs px-2 py-0.5 rounded"
@@ -166,7 +246,7 @@ const ViewDetailsModal = ({
                     </span>
                   </div>
                   <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                    {bookedSession.advisor.credentials}
+                  {displaySession.advisor.credentials}
                   </p>
                 </div>
               </div>
@@ -176,17 +256,17 @@ const ViewDetailsModal = ({
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold"
+                    className="flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full"
                     style={{ 
                       backgroundColor: 'rgba(51, 78, 172, 0.1)',
                       color: 'var(--color-primary)'
                     }}
                   >
-                    {bookedSession.employee.charAt(0)}
+                    {displaySession.employee.charAt(0)}
                   </div>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                      {bookedSession.employee}
+                    {displaySession.employee}
                     </p>
                     <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                       Participant
@@ -197,20 +277,20 @@ const ViewDetailsModal = ({
             </div>
 
             {/* Notes */}
-            {bookedSession.notes && (
-              <div 
-                className="p-3 rounded-xl"
-                style={{ 
-                  backgroundColor: 'var(--color-bg-tertiary)',
-                  border: '1px solid var(--color-border-primary)'
-                }}
-              >
-                <h4 className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-secondary)' }}>
-                  Notes
-                </h4>
-                <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>
-                  {bookedSession.notes}
-                </p>
+          {displaySession.notes && (
+            <div 
+              className="p-3 rounded-xl"
+              style={{ 
+                backgroundColor: 'var(--color-bg-tertiary)',
+                border: '1px solid var(--color-border-primary)'
+              }}
+            >
+              <h4 className="mb-2 text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                Notes
+              </h4>
+              <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>
+                {displaySession.notes}
+              </p>
               </div>
             )}
 

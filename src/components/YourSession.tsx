@@ -1,14 +1,21 @@
 import { Clock, ExternalLink, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { getConsultationDetails } from '../api/coaches'
+import { useState } from 'react'
+import Toast from './Toast'
 
 interface Session {
   id: string
-  date: string
-  time: string
+  date?: string
+  time?: string
   status: 'CONFIRMED' | 'PENDING' | 'CANCELLED'
   counselorName?: string
   sessionType?: string
   meetingLink?: string
+  slot?: {
+    startTime: string
+    endTime: string
+  }
 }
 
 interface YourSessionProps {
@@ -17,24 +24,40 @@ interface YourSessionProps {
 
 const YourSession = ({ sessionDetails }: YourSessionProps) => {
   const navigate = useNavigate()
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState<'success' | 'error'>('error')
 
   const currentSession = sessionDetails
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'var(--color-success)'
-      case 'pending':
-        return 'var(--color-warning)'
-      case 'cancelled':
-        return 'var(--color-error)'
-      default:
-        return 'var(--color-text-secondary)'
+  const handleViewDetails = async () => {
+    if (!sessionDetails?.id) return;
+    try {
+      // const details = await getConsultationDetails(sessionDetails.id);
+      const details = sessionDetails;
+      // console.log("view details : ", details);
+      if (!details || !details.id) {
+        setToastMessage('Session details not found');
+        setToastType('error');
+        setShowToast(true);
+        return;
+      }
+      navigate('/sessions', {
+        state: {
+          openViewDetails: true,
+          consultationData: details,
+        },
+      });
+    } catch (error) {
+      setToastMessage('Failed to load consultation details');
+      setToastType('error');
+      setShowToast(true);
     }
-  }
+  }  
 
-  const getStatusBgColor = (status: string) => {
-    switch (status) {
+  const getStatusBgColor = (status: string = '') => {
+    const upperStatus = status.toUpperCase()
+    switch (upperStatus) {
       case 'CONFIRMED':
         return 'var(--color-success-light)'
       case 'PENDING':
@@ -48,18 +71,18 @@ const YourSession = ({ sessionDetails }: YourSessionProps) => {
 
   return (
     <div
-      className="p-4 md:p-6 rounded-lg"
+      className="p-4 rounded-lg md:p-6"
       style={{
         backgroundColor: 'var(--color-bg-card)',
         border: '1px solid var(--color-border-primary)',
       }}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Left Section - Session Info */}
         <div className="flex items-center gap-4">
           {/* Icon */}
           <div
-            className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+            className="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-full"
             style={{ backgroundColor: 'var(--color-primary-lightest)' }}
           >
             <User className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
@@ -67,10 +90,10 @@ const YourSession = ({ sessionDetails }: YourSessionProps) => {
 
           {/* Session Details */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-h4 mb-1" style={{ color: 'var(--color-text-primary)' }}>
+            <h3 className="mb-1 text-h4" style={{ color: 'var(--color-text-primary)' }}>
               Your Session
             </h3>
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
                 <span
@@ -92,13 +115,15 @@ const YourSession = ({ sessionDetails }: YourSessionProps) => {
 
               </div>
               <span
-                className="px-2 py-1 rounded text-caption font-semibold"
+                className="px-2 py-1 font-semibold rounded text-caption"
                 style={{
-                  backgroundColor: getStatusBgColor(currentSession?.status),
+                  backgroundColor: getStatusBgColor(currentSession?.status || ''),
                   color: "white",
                 }}
               >
-                {currentSession?.status?.charAt(0).toUpperCase() + currentSession?.status.slice(1)}
+                {currentSession?.status ? 
+                  currentSession.status.charAt(0).toUpperCase() + currentSession.status.slice(1).toLowerCase() 
+                  : 'Unknown'}
               </span>
             </div>
           </div>
@@ -107,8 +132,8 @@ const YourSession = ({ sessionDetails }: YourSessionProps) => {
         {/* Right Section - Action Buttons */}
         <div className="flex items-center gap-3 sm:flex-shrink-0">
           <button
-            onClick={() => navigate('/sessions')}
-            className="px-4 py-2 rounded-lg text-body-md font-semibold hover:opacity-80 transition-opacity border"
+            onClick={handleViewDetails}
+            className="px-4 py-2 font-semibold transition-opacity border rounded-lg text-body-md hover:opacity-80"
             style={{
               backgroundColor: 'transparent',
               color: 'var(--color-primary)',
@@ -119,11 +144,11 @@ const YourSession = ({ sessionDetails }: YourSessionProps) => {
           </button>
           <button
             onClick={() => {
-              // TODO: Implement join session logic
-
-              console.log(currentSession?.meetingLink)
+              if (currentSession?.meetingLink) {
+                window.open(currentSession.meetingLink, '_blank');
+              }
             }}
-            className="px-4 py-2 rounded-lg text-body-md font-semibold hover:opacity-90 transition-opacity flex items-center gap-2"
+            className="flex items-center gap-2 px-4 py-2 font-semibold transition-opacity rounded-lg text-body-md hover:opacity-90"
             style={{
               backgroundColor: 'var(--color-primary)',
               color: 'var(--color-text-inverse)',
@@ -134,6 +159,14 @@ const YourSession = ({ sessionDetails }: YourSessionProps) => {
           </button>
         </div>
       </div>
+      
+      {showToast && (
+        <Toast 
+          message={toastMessage} 
+          type={toastType} 
+          onClose={() => setShowToast(false)} 
+        />
+      )}
     </div>
   )
 }
