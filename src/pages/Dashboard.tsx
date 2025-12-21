@@ -117,7 +117,7 @@ const Dashboard = () => {
   const totalExpense = monthlySummary?.totalExpense || 0
   const savings = monthlySummary?.savings || 0
   const budget = monthlySummary?.budget || 0
-  const categoryBreakdown = monthlySummary?.categoryBreakdown.expense || {}
+  const categoryBreakdown = monthlySummary?.categoryBreakdown.expense || monthlySummary?.categoryBreakdown || {}
 
   // Prepare chart data from last 6 months trends
   const chartData = trendsData?.trends?.map((trend: any) => ({
@@ -218,7 +218,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:opacity-80 transition-opacity"
+              className="p-2 transition-opacity rounded-lg lg:hidden hover:opacity-80"
               style={{
                 backgroundColor: 'var(--color-bg-tertiary)',
                 color: 'var(--color-text-primary)',
@@ -230,8 +230,8 @@ const Dashboard = () => {
 
             <div>
               {isSidebarCollapsed && (
-                <div className="hidden lg:flex items-center gap-1 mb-1">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center">
+                <div className="items-center hidden gap-1 mb-1 lg:flex">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-xl">
                     <img src="/logo.png" alt="Koshpal logo" className="w-[80px] h-[40px] bg-transparent" />
                   </div>
                   <h1 className="text-h2" style={{ color: 'var(--color-text-primary)' }}>
@@ -245,9 +245,9 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <button
+          {/* <button
             onClick={toggleDarkMode}
-            className="p-2 rounded-lg hover:opacity-80 transition-opacity"
+            className="p-2 transition-opacity rounded-lg hover:opacity-80"
             style={{
               backgroundColor: 'var(--color-bg-tertiary)',
               color: 'var(--color-text-primary)',
@@ -255,14 +255,14 @@ const Dashboard = () => {
             aria-label="Toggle dark mode"
           >
             {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
+          </button> */}
         </header>
 
         {/* Main Scrollable Content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
+        <main className="flex-1 p-4 overflow-y-auto sm:p-6 md:p-8">
           <div className="mb-8">
             {/* Mobile Scroll */}
-            <div className="md:hidden flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+            <div className="flex gap-4 pb-4 overflow-x-auto md:hidden snap-x snap-mandatory scrollbar-hide">
               {statCards.map((card, index) => (
                 <div key={index} className="min-w-[280px] snap-center">
                   <StatCard 
@@ -274,7 +274,7 @@ const Dashboard = () => {
             </div>
 
             {/* Grid layout for larger screens */}
-            <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="hidden gap-6 md:grid md:grid-cols-2 lg:grid-cols-4">
               {statCards.map((card, index) => (
                 <StatCard 
                   key={index} 
@@ -293,7 +293,7 @@ const Dashboard = () => {
           }
 
           {/* Charts Section - Responsive Layout */}
-          <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 mb-8 lg:grid-cols-2">
             {/* Income vs Expenses Chart - Shows first on mobile, left on desktop */}
             {chartData.length > 0 && (
               <div className="order-1">
@@ -307,7 +307,7 @@ const Dashboard = () => {
                 <SpendingCategoryChart data={categoryData} />
               ) : (
                 <div
-                  className="p-6 rounded-lg h-full flex items-center justify-center"
+                  className="flex items-center justify-center h-full p-6 rounded-lg"
                   style={{
                     backgroundColor: 'var(--color-bg-card)',
                     border: '1px solid var(--color-border-primary)',
@@ -315,7 +315,7 @@ const Dashboard = () => {
                   }}
                 >
                   <div className="text-center">
-                    <h3 className="text-h3 mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                    <h3 className="mb-2 text-h3" style={{ color: 'var(--color-text-primary)' }}>
                       Spending by Category
                     </h3>
                     <p className="text-body-md" style={{ color: 'var(--color-text-secondary)' }}>
@@ -328,7 +328,7 @@ const Dashboard = () => {
           </div>
 
           {/* Financial Goals and Recent Transactions Section - Responsive Grid */}
-          <div className="mb-8 grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 mb-8 xl:grid-cols-2">
             {/* Financial Goals - Shows first on mobile, left on desktop */}
             <div className="order-1">
               <FinancialGoals />

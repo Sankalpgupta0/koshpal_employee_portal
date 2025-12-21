@@ -6,8 +6,8 @@ import YourSession from '../components/YourSession'
 import BookingModal from '../components/BookingModal'
 import ViewDetailsModal from '../components/ViewDetailsModal'
 import TipsModal from '../components/TipsModal'
-import { getCoaches, getCoachSlots, bookConsultation } from '../api/coaches'
-import type { Coach, CoachSlot } from '../api/coaches'
+import { getCoaches, getCoachSlots, getAllCoachSlots, bookConsultation } from '../api/coaches'
+import type { Coach, CoachSlot, CoachWithSlots } from '../api/coaches'
 import { getEmployeeLatestConsultation } from '../api/employee'
 
 interface Advisor {
@@ -48,6 +48,7 @@ const Sessions = () => {
     time: string
     notes: string
     employee: string
+    meetingLink?: string
   } | null>(null)
   const [isTipsModalOpen, setIsTipsModalOpen] = useState(false)
   const [advisors, setAdvisors] = useState<Advisor[]>([])
@@ -114,15 +115,22 @@ const Sessions = () => {
           const daysInMonth = new Date(year, month + 1, 0).getDate()
           const datesSet = new Set<string>()
           
-          // Fetch slots for each day in the month
+          // Fetch slots for each day in the month using optimized endpoint
+          // This fetches all coaches' slots, but we filter for selected coach
           const promises = []
           for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day)
-            const dateStr = date.toISOString().split('T')[0]
+            // Use UTC date string to avoid timezone shifts
+            const year_utc = date.getFullYear()
+            const month_utc = String(date.getMonth() + 1).padStart(2, '0')
+            const day_utc = String(date.getDate()).padStart(2, '0')
+            const dateStr = `${year_utc}-${month_utc}-${day_utc}`
             promises.push(
-              getCoachSlots(selectedAdvisor.id, dateStr)
-                .then(slots => {
-                  if (slots && slots.length > 0) {
+              getAllCoachSlots(dateStr)
+                .then(coachesWithSlots => {
+                  // Check if selected coach has slots on this date
+                  const coachData = coachesWithSlots.find(c => c.coachId === selectedAdvisor.id)
+                  if (coachData && coachData.slots.length > 0) {
                     datesSet.add(dateStr)
                   }
                 })
@@ -145,9 +153,31 @@ const Sessions = () => {
       const fetchSlots = async () => {
         try {
           setLoadingSlots(true)
-          const dateStr = selectedDate.toISOString().split('T')[0]
-          const slots = await getCoachSlots(selectedAdvisor.id, dateStr)
-          setAvailableSlots(slots)
+          // Use local date components to avoid timezone shifts
+          const year = selectedDate.getFullYear()
+          const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+          const day = String(selectedDate.getDate()).padStart(2, '0')
+          const dateStr = `${year}-${month}-${day}`
+          
+          // Use optimized endpoint to get all coaches' slots
+          const coachesWithSlots = await getAllCoachSlots(dateStr)
+          
+          // Filter for selected coach and transform to CoachSlot format
+          const coachData = coachesWithSlots.find(c => c.coachId === selectedAdvisor.id)
+          
+          if (coachData) {
+            const transformedSlots: CoachSlot[] = coachData.slots.map(slot => ({
+              id: slot.slotId,
+              coachId: selectedAdvisor.id,
+              date: dateStr,
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+              status: 'AVAILABLE' as const,
+            }))
+            setAvailableSlots(transformedSlots)
+          } else {
+            setAvailableSlots([])
+          }
         } catch (error) {
           console.error('Error fetching slots:', error)
           setAvailableSlots([])
@@ -244,19 +274,22 @@ const Sessions = () => {
   const handleNextStep = async () => {
     if (currentStep === 2 && selectedAdvisor && selectedDate && selectedTime && selectedSlotId) {
       try {
+        setLoadingSlots(true) // Show loading state
+        
         // Book the consultation via API
-        await bookConsultation({
+        const result = await bookConsultation({
           slotId: selectedSlotId,
           notes: notes || undefined,
         })
 
-        // Save booking data for display
+        // Save booking data for display with meeting link
         setBookedSession({
           advisor: selectedAdvisor,
           date: selectedDate,
           time: selectedTime,
           notes: notes,
-          employee: JSON.parse(localStorage.getItem('user') || '{}').fullName || 'Employee'
+          employee: JSON.parse(localStorage.getItem('user') || '{}').fullName || 'Employee',
+          meetingLink: result.booking.meetingLink,
         })
 
         // Log booking details
@@ -265,13 +298,58 @@ const Sessions = () => {
           date: formatDate(selectedDate),
           time: selectedTime,
           notes: notes,
+          meetingLink: result.booking.meetingLink,
         })
-      } catch (error) {
+
+        // Move to confirmation step
+        setCurrentStep(3)
+      } catch (error: any) {
         console.error('Error booking session:', error)
-        alert('Failed to book session. Please try again.')
-        return
+        
+        // Show user-friendly error message
+        const errorMessage = 
+          error.response?.data?.message ||
+          error.response?.status === 429 ? 'Too many booking attempts. Please wait a moment and try again.' :
+          error.response?.status === 400 ? 'This time slot is no longer available. Please select another time.' :
+          'Failed to book session. Please try again.'
+        
+        alert(errorMessage)
+        
+        // If slot was taken, refresh slots
+        if (error.response?.status === 400) {
+          setSelectedTime(null)
+          setSelectedSlotId(null)
+          // Refresh available slots
+          if (selectedDate) {
+            const year = selectedDate.getFullYear()
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+            const day = String(selectedDate.getDate()).padStart(2, '0')
+            const dateStr = `${year}-${month}-${day}`
+            try {
+              const coachesWithSlots = await getAllCoachSlots(dateStr)
+              const coachData = coachesWithSlots.find(c => c.coachId === selectedAdvisor.id)
+              if (coachData) {
+                const transformedSlots: CoachSlot[] = coachData.slots.map(slot => ({
+                  id: slot.slotId,
+                  coachId: selectedAdvisor.id,
+                  date: dateStr,
+                  startTime: slot.startTime,
+                  endTime: slot.endTime,
+                  status: 'AVAILABLE' as const,
+                }))
+                setAvailableSlots(transformedSlots)
+              }
+            } catch (refreshError) {
+              console.error('Error refreshing slots:', refreshError)
+            }
+          }
+        }
+      } finally {
+        setLoadingSlots(false)
       }
+      return // Don't auto-advance
     }
+    
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1)
     }
@@ -335,7 +413,7 @@ const Sessions = () => {
         <button
           key={`prev-${i}`}
           disabled
-          className="h-8 sm:h-10 flex items-center justify-center text-xs sm:text-sm"
+          className="flex items-center justify-center h-8 text-xs sm:h-10 sm:text-sm"
           style={{ color: 'var(--color-text-tertiary)', opacity: 0.3 }}
         >
           {prevMonthDays - i}
@@ -356,7 +434,7 @@ const Sessions = () => {
           key={day}
           onClick={() => hasSlots && !isPast && setSelectedDate(date)}
           disabled={!hasSlots || isPast}
-          className="h-8 sm:h-10 flex items-center justify-center text-xs sm:text-sm rounded-lg hover:bg-opacity-80 transition-colors"
+          className="flex items-center justify-center h-8 text-xs transition-colors rounded-lg sm:h-10 sm:text-sm hover:bg-opacity-80"
           style={{
             backgroundColor: isSelected ? 'var(--color-primary)' : 'transparent',
             color: isSelected ? 'white' : hasSlots && !isPast ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
@@ -378,7 +456,7 @@ const Sessions = () => {
         <button
           key={`next-${day}`}
           disabled
-          className="h-8 sm:h-10 flex items-center justify-center text-xs sm:text-sm"
+          className="flex items-center justify-center h-8 text-xs sm:h-10 sm:text-sm"
           style={{ color: 'var(--color-text-tertiary)', opacity: 0.3 }}
         >
           {day}
@@ -416,7 +494,7 @@ const Sessions = () => {
           {/* Hamburger Menu - Mobile Only */}
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-lg hover:opacity-80 transition-opacity"
+            className="p-2 transition-opacity rounded-lg lg:hidden hover:opacity-80"
             style={{
               backgroundColor: 'var(--color-bg-tertiary)',
               color: 'var(--color-text-primary)',
@@ -427,27 +505,27 @@ const Sessions = () => {
 
           <div className="flex items-center gap-3 ml-auto">
             {/* Notification Bell */}
-            <button
-              className="relative p-2 rounded-lg hover:opacity-80 transition-opacity"
+            {/* <button
+              className="relative p-2 transition-opacity rounded-lg hover:opacity-80"
               style={{
                 backgroundColor: 'var(--color-bg-tertiary)',
                 color: 'var(--color-text-primary)',
               }}
             >
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+              <span className="absolute w-2 h-2 bg-red-500 rounded-full top-1 right-1"></span>
+            </button> */}
 
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-7xl mx-auto space-y-5">
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="mx-auto space-y-5 max-w-7xl">
             {/* Page Title */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                <h1 className="mb-1 text-3xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>
                   Financial Advisors <span className="hidden md:inline">💼</span>
                 </h1>
                 <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
@@ -455,7 +533,7 @@ const Sessions = () => {
                 </p>
               </div>
               <div
-                className="px-4 py-2 rounded-full flex items-center gap-2"
+                className="flex items-center gap-2 px-4 py-2 rounded-full"
                 style={{
                   backgroundColor: '#E6F0EA',
                   border: '0.8px solid #CCE1D5',
@@ -476,19 +554,19 @@ const Sessions = () => {
 
             {/* Advisors Grid */}
             {loading ? (
-              <div className="text-center py-12">
+              <div className="py-12 text-center">
                 <p className="text-lg" style={{ color: 'var(--color-text-secondary)' }}>
                   Loading coaches...
                 </p>
               </div>
             ) : advisors.length === 0 ? (
-              <div className="text-center py-12">
+              <div className="py-12 text-center">
                 <p className="text-lg" style={{ color: 'var(--color-text-secondary)' }}>
                   No coaches available at the moment.
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {advisors.map((advisor) => (
                 <div
                   key={advisor.id}
@@ -501,24 +579,24 @@ const Sessions = () => {
                   {/* Advisor Header */}
                   <div className="flex gap-4 mb-3">
                     {/* Profile Image */}
-                    <div className="w-28 h-32 rounded-2xl overflow-hidden flex-shrink-0">
+                    <div className="flex-shrink-0 h-32 overflow-hidden w-28 rounded-2xl">
                       <img
                         src={advisor.image}
                         alt={advisor.name}
-                        className="w-full h-full object-cover"
+                        className="object-cover w-full h-full"
                       />
                     </div>
 
                     {/* Advisor Info */}
-                    <div className="flex-1 flex flex-col gap-2">
+                    <div className="flex flex-col flex-1 gap-2">
                       <div>
-                        <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                        <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>
                           {advisor.name}
                         </h3>
                         
                         {/* Rating */}
                         <div
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-xl mb-2"
+                          className="inline-flex items-center gap-1 px-2 py-1 mb-2 rounded-xl"
                           style={{
                             backgroundColor: 'rgba(255, 255, 255, 0.95)',
                             boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.10)',
@@ -532,7 +610,7 @@ const Sessions = () => {
 
                         {/* Credentials Badge */}
                         <div
-                          className="inline-block px-2 py-1 rounded-md text-xs font-semibold"
+                          className="inline-block px-2 py-1 text-xs font-semibold rounded-md"
                           style={{
                             backgroundColor: '#17A2B8',
                             color: 'white',
@@ -593,7 +671,7 @@ const Sessions = () => {
                   </div>
 
                   {/* Next Available */}
-                  <div
+                  {/* <div
                     className="flex items-center justify-between px-3 py-2.5 rounded-xl mb-3"
                     style={{
                       backgroundColor: 'rgba(255, 255, 255, 0.60)',
@@ -615,12 +693,12 @@ const Sessions = () => {
                     >
                       Available
                     </span>
-                  </div>
+                  </div> */}
 
                   {/* Action Buttons */}
                   <div className="flex gap-2">
                     <button
-                      className=" cursor-pointer flex-1 px-4 py-3 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
+                      className="flex-1 px-4 py-3 text-sm font-semibold transition-opacity rounded-lg cursor-pointer hover:opacity-90"
                       style={{
                         backgroundColor: 'var(--color-bg-card)',
                         color: 'var(--color-text-primary)',
@@ -631,7 +709,7 @@ const Sessions = () => {
                     </button>
                     <button
                       onClick={() => handleBookSession(advisor)}
-                      className=" cursor-pointer flex-1 px-4 py-3 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                      className="flex items-center justify-center flex-1 gap-2 px-4 py-3 text-sm font-bold transition-opacity rounded-lg cursor-pointer hover:opacity-90"
                       style={{
                         backgroundColor: 'var(--color-primary)',
                         color: 'var(--color-text-inverse)',
@@ -650,20 +728,20 @@ const Sessions = () => {
 
           {/* Bottom Banner - Find New Coach */}
           <div 
-            className="border-t px-6 py-4"
+            className="px-6 py-4 mt-10 border-t"
             style={{
-              backgroundColor: 'var(--color-bg-card)',
+              // backgroundColor: 'var(--color-bg-card)',
               borderColor: 'var(--color-border-primary)',
             }}
           >
             <div 
-              className="rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+              className="flex flex-col items-start justify-between gap-3 p-4 rounded-xl sm:flex-row sm:items-center"
               style={{
                 background: 'linear-gradient(135deg, #4A5EAF 0%, #5DA9A1 100%)',
               }}
             >
               <div className="flex-1">
-                <h3 className="text-base sm:text-lg font-bold text-white mb-1">
+                <h3 className="mb-1 text-base font-bold text-white sm:text-lg">
                   Still struggling to find coach?
                 </h3>
                 <p className="text-sm text-white text-opacity-90">

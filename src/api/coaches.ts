@@ -23,6 +23,17 @@ export interface CoachSlot {
   status: 'AVAILABLE' | 'BOOKED' | 'CANCELLED';
 }
 
+export interface CoachWithSlots {
+  coachId: string;
+  coachName: string;
+  expertise: string[];
+  slots: Array<{
+    slotId: string;
+    startTime: string;
+    endTime: string;
+  }>;
+}
+
 export interface Consultation {
   id: string;
   meetingLink: string;
@@ -69,9 +80,22 @@ export const getCoaches = async (): Promise<Coach[]> => {
 /**
  * Get slots for a specific coach on a specific date
  * GET /api/v1/employee/coaches/:coachId/slots
+ * @deprecated Use getAllCoachSlots for better performance
  */
 export const getCoachSlots = async (coachId: string, date: string): Promise<CoachSlot[]> => {
   const response = await axiosInstance.get(`/employee/coaches/${coachId}/slots`, {
+    params: { date },
+  });
+  return response.data;
+};
+
+/**
+ * Get all coach slots aggregated for a specific date (OPTIMIZED)
+ * GET /api/v1/employee/coaches/slots?date=YYYY-MM-DD
+ * Returns all active coaches with their available slots in a single request
+ */
+export const getAllCoachSlots = async (date: string): Promise<CoachWithSlots[]> => {
+  const response = await axiosInstance.get('/employee/coaches/slots', {
     params: { date },
   });
   return response.data;
@@ -84,7 +108,17 @@ export const getCoachSlots = async (coachId: string, date: string): Promise<Coac
 export const bookConsultation = async (data: {
   slotId: string;
   notes?: string;
-}): Promise<{ success: boolean; message: string }> => {
+}): Promise<{
+  message: string;
+  booking: {
+    id: string;
+    meetingLink: string;
+    calendarEventId: string;
+    date: Date;
+    startTime: Date;
+    endTime: Date;
+  };
+}> => {
   const response = await axiosInstance.post('/employee/consultations/book', data);
   return response.data;
 };

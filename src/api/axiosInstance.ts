@@ -42,6 +42,12 @@ axiosInstance.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+
+    if (error.response?.status === 429) {
+      // Too Many Requests - should not occur with throttling disabled
+      console.warn('Rate limit encountered. Please try again.');
+    }
+
     return Promise.reject(error);
   }
 );
