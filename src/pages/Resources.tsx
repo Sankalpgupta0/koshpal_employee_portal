@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Menu, Moon, Sun } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 
 const Resources = () => {
-  const navigate = useNavigate()
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
@@ -23,13 +21,6 @@ const Resources = () => {
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', String(isSidebarCollapsed))
   }, [isSidebarCollapsed])
-
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      navigate('/login')
-    }
-  }, [navigate])
 
   const toggleDarkMode = () => {
     const newMode = !isDarkMode

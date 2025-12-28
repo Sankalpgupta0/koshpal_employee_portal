@@ -1,6 +1,5 @@
 import { Clock, ExternalLink, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { getConsultationDetails } from '../api/coaches'
 import { useState } from 'react'
 import Toast from './Toast'
 

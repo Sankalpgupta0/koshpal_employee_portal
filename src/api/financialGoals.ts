@@ -43,7 +43,7 @@ export interface UpdateGoalRequest {
 /**
  * Create financial goals for an employee (not used - use addGoal instead)
  */
-export const createFinancialGoals = async (data: CreateGoalsRequest) => {
+export const createFinancialGoals = async () => {
   // This endpoint doesn't exist in backend, use addGoal instead
   throw new Error('Use addGoal instead');
 };
@@ -51,7 +51,7 @@ export const createFinancialGoals = async (data: CreateGoalsRequest) => {
 /**
  * Get financial goals by employee ID (for current user)
  */
-export const getFinancialGoalsByEmployeeId = async (employeeId: string): Promise<FinancialGoalsResponse> => {
+export const getFinancialGoalsByEmployeeId = async (): Promise<FinancialGoalsResponse> => {
   const response = await axiosInstance.get('/employee/goals');
   return response.data;
 };
@@ -59,7 +59,7 @@ export const getFinancialGoalsByEmployeeId = async (employeeId: string): Promise
 /**
  * Update all financial goals for an employee (not used - use updateGoal instead)
  */
-export const updateFinancialGoals = async (employeeId: string, financialGoals: Omit<Goal, '_id'>[]) => {
+export const updateFinancialGoals = async () => {
   // This endpoint doesn't exist in backend, use updateGoal instead
   throw new Error('Use updateGoal instead');
 };
@@ -67,7 +67,7 @@ export const updateFinancialGoals = async (employeeId: string, financialGoals: O
 /**
  * Add a single goal to existing financial goals
  */
-export const addGoal = async (employeeId: string, goal: AddGoalRequest) => {
+export const addGoal = async (goal: AddGoalRequest) => {
   const response = await axiosInstance.post('/employee/goals', goal);
   return response.data;
 };
@@ -75,7 +75,7 @@ export const addGoal = async (employeeId: string, goal: AddGoalRequest) => {
 /**
  * Update a specific goal
  */
-export const updateGoal = async (employeeId: string, goalId: string, updates: UpdateGoalRequest) => {
+export const updateGoal = async (goalId: string, updates: UpdateGoalRequest) => {
   const response = await axiosInstance.put(`/employee/goals/${goalId}`, updates);
   return response.data;
 };
@@ -83,7 +83,7 @@ export const updateGoal = async (employeeId: string, goalId: string, updates: Up
 /**
  * Delete a specific goal
  */
-export const deleteGoal = async (employeeId: string, goalId: string) => {
+export const deleteGoal = async (goalId: string) => {
   const response = await axiosInstance.delete(`/employee/goals/${goalId}`);
   return response.data;
 };
@@ -91,6 +91,6 @@ export const deleteGoal = async (employeeId: string, goalId: string) => {
 /**
  * Delete all financial goals for an employee (not implemented)
  */
-export const deleteFinancialGoals = async (employeeId: string) => {
+export const deleteFinancialGoals = async () => {
   throw new Error('Not implemented in backend');
 };

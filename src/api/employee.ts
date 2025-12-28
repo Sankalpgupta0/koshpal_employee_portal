@@ -7,6 +7,7 @@ export interface Employee {
   phone?: string;
   profilePicture?: string;
   companyId: string;
+  role: string;
   department?: string;
   salary?: number;
   budget?: number;
@@ -22,8 +23,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   message: string;
-  employee: Employee;
-  token: string;
+  user: Employee;
 }
 
 export interface CreateEmployeeRequest {
@@ -62,30 +62,27 @@ export const getEmployeeLatestConsultation = async () => {
 // ==================== Employee API ====================
 
 /**
- * Employee login
+ * Employee login - now uses httpOnly cookies
  */
 export const loginEmployee = async (credentials: LoginRequest): Promise<LoginResponse> => {
   try {
     const response = await axiosInstance.post('/auth/login', credentials);
-    // Map backend response to frontend format
-    const { accessToken, user } = response.data;
-    
-    console.log('Login response:', response.data);
+    // Backend now sets httpOnly cookies, response only contains user data
+    const { user } = response.data;
     
     return {
       message: 'Login successful',
-      employee: {
+      user: {
         _id: user.id,
         name: user.name || user.email,
         email: user.email,
         companyId: user.companyId,
+        role: user.role,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
-      token: accessToken,
     };
   } catch (error) {
-    console.error('Login API error:', error);
     throw error;
   }
 };
@@ -112,7 +109,7 @@ export const getEmployees = async (companyId: string, page = 1, limit = 10) => {
 /**
  * Get employee by ID (use auth/me for current user)
  */
-export const getEmployeeById = async (employeeId: string): Promise<Employee> => {
+export const getEmployeeById = async (): Promise<Employee> => {
   const response = await axiosInstance.get('/auth/me');
   const user = response.data;
   return {
@@ -120,6 +117,7 @@ export const getEmployeeById = async (employeeId: string): Promise<Employee> => 
     name: user.email,
     email: user.email,
     companyId: user.companyId || '',
+    role: user.role,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

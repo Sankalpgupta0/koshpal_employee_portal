@@ -50,7 +50,6 @@ const EditGoalModal = ({ isOpen, onClose, onSubmit, goal }: EditGoalModalProps) 
       goalDate: formData.goalDate,
     }
 
-    console.log('Updated Goal Data:', goalData)
     onSubmit(goalData)
     onClose()
   }

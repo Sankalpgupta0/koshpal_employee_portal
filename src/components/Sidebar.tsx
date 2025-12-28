@@ -1,6 +1,5 @@
 import {
   Home,
-  BookOpen,
   Users,
   Calendar,
   TrendingUp,

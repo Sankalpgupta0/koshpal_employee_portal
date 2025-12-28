@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, Menu } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import { getMyConsultations, getMyConsultationStats, type Consultation, type ConsultationStats } from '../api/coaches'
 
 const Schedule = () => {
-  const navigate = useNavigate()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebarCollapsed')
@@ -39,11 +37,21 @@ const Schedule = () => {
     const fetchData = async () => {
       try {
         setLoading(true)
+        // Calculate the date range for the current week being displayed
+        const weekStart = new Date(currentWeekStart)
+        const weekEnd = new Date(currentWeekStart)
+        weekEnd.setDate(currentWeekStart.getDate() + 6)
+        
+        const startDate = weekStart.toISOString().split('T')[0] // YYYY-MM-DD format
+        const endDate = weekEnd.toISOString().split('T')[0] // YYYY-MM-DD format
+        
         const [consultationsData, statsData] = await Promise.all([
-          getMyConsultations('thisWeek'),
+          getMyConsultations(undefined, startDate, endDate),
           getMyConsultationStats()
         ])
         setConsultations(consultationsData)
+        // console.log("consultationsData", consultationsData);
+        // console.log("Week range:", startDate, "to", endDate);
         setStats(statsData)
       } catch (error) {
         console.error('Error fetching consultation data:', error)
@@ -52,10 +60,7 @@ const Schedule = () => {
       }
     }
 
-    const token = localStorage.getItem('token')
-    if (token) {
-      fetchData()
-    }
+    fetchData()
   }, [currentWeekStart])
 
   useEffect(() => {
@@ -68,13 +73,6 @@ const Schedule = () => {
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', String(isSidebarCollapsed))
   }, [isSidebarCollapsed])
-
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      navigate('/login')
-    }
-  }, [navigate])
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -91,18 +89,55 @@ const Schedule = () => {
         } ${isSidebarOpen ? 'lg:blur-0 blur-[2px]' : ''}`}
         style={{ backgroundColor: 'var(--color-bg-secondary)' }}
       >
-        
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <div className="max-w-7xl mx-auto space-y-4">
+        {/* Header */}
+        <header
+          className="flex items-center justify-between px-6 border-b"
+          style={{
+            backgroundColor: 'var(--color-bg-card)',
+            borderColor: 'var(--color-border-primary)',
+            height: '89px',
+          }}
+        >
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 transition-opacity rounded-lg lg:hidden hover:opacity-80"
+              style={{
+                backgroundColor: 'var(--color-bg-tertiary)',
+                color: 'var(--color-text-primary)',
+              }}
+              aria-label="Open menu"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+
+            <div>
+              {isSidebarCollapsed && (
+                <div className="items-center hidden gap-1 mb-1 lg:flex">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-xl">
+                    <img src="/logo.png" alt="Koshpal logo" className="w-[80px] h-[40px] bg-transparent" />
+                  </div>
+                  <h1 className="text-h2" style={{ color: 'var(--color-text-primary)' }}>
+                    Koshpal
+                  </h1>
+                </div>
+              )}
+              
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 p-4 overflow-y-auto sm:p-6">
+          <div className="mx-auto space-y-4 max-w-7xl">
             {/* Page Title */}
             <div>
-              <h1 className="text-sm sm:text-md font-regular font-outfit mb-1" style={{ color: 'var(--color-text-primary)' }}>
+              <h1 className="mb-1 text-sm sm:text-md font-regular font-outfit" style={{ color: 'var(--color-text-primary)' }}>
                 Manage your schedule and availability
               </h1>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {/* This Week */}
               <div 
                 className="p-4 rounded-xl"
@@ -111,7 +146,7 @@ const Schedule = () => {
                   border: '1px solid var(--color-border-primary)'
                 }}
               >
-                <div className="text-3xl font-bold mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                <div className="mb-1 text-3xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
                   {loading ? '...' : stats.thisWeek}
                 </div>
                 <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
@@ -127,7 +162,7 @@ const Schedule = () => {
                   border: '1px solid var(--color-border-primary)'
                 }}
               >
-                <div className="text-3xl font-bold mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                <div className="mb-1 text-3xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
                   {loading ? '...' : stats.thisMonth}
                 </div>
                 <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
@@ -143,7 +178,7 @@ const Schedule = () => {
                   border: '1px solid var(--color-border-primary)'
                 }}
               >
-                <div className="text-3xl font-bold mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                <div className="mb-1 text-3xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
                   {loading ? '...' : Math.round(stats.minutesBooked)}
                 </div>
                 <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
@@ -159,7 +194,7 @@ const Schedule = () => {
                   border: '1px solid var(--color-border-primary)'
                 }}
               >
-                <div className="text-3xl font-bold mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                <div className="mb-1 text-3xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
                   {loading ? '...' : stats.confirmed}
                 </div>
                 <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
@@ -170,7 +205,7 @@ const Schedule = () => {
 
             {/* Calendar Section */}
             <div 
-              className="rounded-xl overflow-hidden"
+              className="overflow-hidden rounded-xl"
               style={{ 
                 backgroundColor: 'var(--color-bg-card)',
                 border: '1px solid var(--color-border-primary)'
@@ -178,7 +213,7 @@ const Schedule = () => {
             >
               {/* Calendar Header with Navigation */}
               <div 
-                className="px-4 py-3 flex items-center justify-between border-b"
+                className="flex items-center justify-between px-4 py-3 border-b"
                 style={{ borderColor: 'var(--color-border-primary)' }}
               >
                 <div className="flex items-center gap-2">
@@ -243,7 +278,7 @@ const Schedule = () => {
                       return (
                         <div 
                           key={i}
-                          className="p-3 text-center text-sm font-medium"
+                          className="p-3 text-sm font-medium text-center"
                           style={{ color: isToday ? '#4A5EAF' : 'var(--color-text-primary)' }}
                         >
                           {dayName}, {monthDay}
@@ -281,13 +316,24 @@ const Schedule = () => {
                           const cellEvents = consultations.filter(consultation => {
                             const slotDate = new Date(consultation.slot.date)
                             const startTime = new Date(consultation.slot.startTime)
-                            const hour = startTime.getHours()
-                            const period = hour >= 12 ? 'PM' : 'AM'
-                            const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-                            const eventTimeSlot = `${displayHour} ${period}`
                             
-                            return slotDate.toDateString() === cellDate.toDateString() && 
-                                   eventTimeSlot === timeSlot
+                            // Check if the consultation is on the same day
+                            if (slotDate.toDateString() !== cellDate.toDateString()) {
+                              return false
+                            }
+                            
+                            // Parse the time slot (e.g., "8 AM" -> hour 8, "1 PM" -> hour 13)
+                            const timeSlotParts = timeSlot.split(' ')
+                            let slotHour = parseInt(timeSlotParts[0])
+                            if (timeSlotParts[1] === 'PM' && slotHour !== 12) {
+                              slotHour += 12
+                            } else if (timeSlotParts[1] === 'AM' && slotHour === 12) {
+                              slotHour = 0
+                            }
+                            
+                            // Check if consultation starts within this hour
+                            const consultationHour = startTime.getHours()
+                            return consultationHour === slotHour
                           })
                           
                           return (
@@ -303,7 +349,7 @@ const Schedule = () => {
                               {cellEvents.map(consultation => (
                                 <div 
                                   key={consultation.id}
-                                  className="rounded p-2 text-xs mb-1"
+                                  className="p-2 mb-1 text-xs rounded"
                                   style={{ 
                                     backgroundColor: consultation.status === 'CONFIRMED' 
                                       ? 'rgba(147, 197, 253, 0.3)' 
@@ -327,7 +373,7 @@ const Schedule = () => {
                                       href={consultation.meetingLink}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="text-xs underline mt-1 block"
+                                      className="block mt-1 text-xs underline"
                                       style={{ color: '#334EAC' }}
                                     >
                                       Join Meeting

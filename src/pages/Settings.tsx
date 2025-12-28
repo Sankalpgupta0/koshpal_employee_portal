@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Menu, Moon, Sun, Settings as SettingsIcon, User, LogOut } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import { getEmployeeById, updateEmployee, type Employee } from '../api/employee'
+import { axiosInstance } from '../api/axiosInstance'
 import Toast from '../components/Toast'
 
 const Settings = () => {
@@ -45,11 +46,11 @@ const Settings = () => {
     localStorage.setItem('sidebarCollapsed', String(isSidebarCollapsed))
   }, [isSidebarCollapsed])
 
-  const fetchUserData = useCallback(async (employeeId: string) => {
+  const fetchUserData = useCallback(async () => {
     try {
       setLoading(true)
       // console.log('Fetching user data for employee ID:', employeeId)
-      const employee: Employee = await getEmployeeById(employeeId)
+      const employee: Employee = await getEmployeeById()
       // console.log('Fetched employee data:', employee.data)
       
       // Split name into first and last name
@@ -83,10 +84,9 @@ const Settings = () => {
   }, [])
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
     const userStr = localStorage.getItem('user')
     
-    if (!token || !userStr) {
+    if (!userStr) {
       navigate('/login')
       return
     }
@@ -127,7 +127,7 @@ const Settings = () => {
       }
       
       // Then fetch fresh data from API
-      fetchUserData(employeeId)
+      fetchUserData()
     } catch (error) {
       console.error('Error parsing user data:', error)
       navigate('/login')
@@ -216,9 +216,15 @@ const Settings = () => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
   }
 
-  const handleLogout = () => {
-    // Clear all localStorage data
-    localStorage.removeItem('token')
+  const handleLogout = async () => {
+    try {
+      // Call backend logout to clear httpOnly cookies
+      await axiosInstance.post('/auth/logout')
+    } catch (error) {
+      // Continue logout even if API call fails
+    }
+    
+    // Clear localStorage data
     localStorage.removeItem('user')
     localStorage.removeItem('rememberMe')
     

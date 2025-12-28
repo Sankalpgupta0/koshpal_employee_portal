@@ -25,9 +25,16 @@ function Login() {
 
   // Check if already logged in
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      navigate('/dashboard')
+    const user = localStorage.getItem('user')
+    if (user) {
+      try {
+        const userData = JSON.parse(user)
+        if (userData.role === 'EMPLOYEE') {
+          navigate('/dashboard')
+        }
+      } catch (error) {
+        localStorage.removeItem('user')
+      }
     }
   }, [navigate])
 
@@ -35,9 +42,8 @@ function Login() {
     try {
       const response = await loginEmployee({ email, password })
       
-      console.log('Login successful:', response)
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.employee))
+      // Only store user data, tokens are in httpOnly cookies
+      localStorage.setItem('user', JSON.stringify(response.user))
       
       if (rememberMe) {
         localStorage.setItem('rememberMe', 'true')
@@ -45,7 +51,6 @@ function Login() {
       
       navigate('/dashboard')
     } catch (error: any) {
-      console.error('Login error:', error)
       showToast(error.response?.data?.message || 'Login failed. Please check your credentials.', 'error')
     }
   }

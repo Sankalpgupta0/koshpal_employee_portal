@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { Menu, Moon, Sun, Wallet, TrendingUp, Users, Calendar } from 'lucide-react'
+import { Menu, Wallet, TrendingUp, Users, Calendar } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import StatCard from '../components/StatCard'
 import YourSession from '../components/YourSession'
@@ -8,11 +8,12 @@ import SpendingCategoryChart from '../components/SpendingCategoryChart'
 import FinancialGoals from '../components/FinancialGoals'
 import RecentTransactions from '../components/RecentTransactions'
 import EditBudgetModal from '../components/EditBudgetModal'
+import { useToast } from '../components/ToastContainer'
 import { getLatestMonthlySummary, getSpendingTrends, updateBudget } from '../api/insights'
 import { getEmployeeLatestConsultation } from '../api/employee'
 
 const Dashboard = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const { showToast } = useToast()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebarCollapsed')
@@ -30,56 +31,49 @@ const Dashboard = () => {
   const [latestConsultation, setLatestConsultation] = useState<any>(null)
   const hasFetched = useRef(false)
 
-  // Initialize dark mode
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme')
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true)
-      document.documentElement.setAttribute('data-theme', 'dark')
-    } else {
-      setIsDarkMode(false)
-      document.documentElement.removeAttribute('data-theme')
-    }
-  }, [])
-
   // Save sidebar collapsed state to localStorage
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', String(isSidebarCollapsed))
   }, [isSidebarCollapsed])
 
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode
-    setIsDarkMode(newMode)
-    if (newMode) {
-      document.documentElement.setAttribute('data-theme', 'dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.removeAttribute('data-theme')
-      localStorage.setItem('theme', 'light')
-    }
-  }
-
   const handleBudgetSave = async (newBudget: number) => {
+    // Validate budget value
+    if (newBudget < 0) {
+      showToast('Budget cannot be negative', 'error')
+      return
+    }
+    if (newBudget > 10000000) {
+      showToast('Budget amount is too large', 'error')
+      return
+    }
+    if (!Number.isFinite(newBudget)) {
+      showToast('Invalid budget amount', 'error')
+      return
+    }
+
     const currentDate = new Date()
     const month = currentDate.getMonth() + 1
     const year = currentDate.getFullYear()
     
-    await updateBudget({ month, year, budget: newBudget })
-    
-    // Refresh the monthly summary to get updated budget
-    const updatedSummary = await getLatestMonthlySummary()
-    setMonthlySummary(updatedSummary || null)
+    try {
+      await updateBudget({ month, year, budget: newBudget })
+      
+      // Refresh the monthly summary to get updated budget
+      const updatedSummary = await getLatestMonthlySummary()
+      setMonthlySummary(updatedSummary || null)
+      showToast('Budget updated successfully', 'success')
+    } catch (error) {
+      showToast('Failed to update budget', 'error')
+    }
   }
 
   // Fetch user and employee summary
   useEffect(() => {
     // Prevent duplicate fetches in StrictMode
     if (hasFetched.current) {
-      console.log('Dashboard: Skipping duplicate fetch (StrictMode)')
       return
     }
     hasFetched.current = true
-    console.log('Dashboard: Fetching data...')
 
     const fetchData = async () => {
       try {
@@ -93,17 +87,21 @@ const Dashboard = () => {
           getEmployeeLatestConsultation()
         ])
 
-        
-        console.log('this Monthly Summary:', summaryResponse)
-        console.log('Spending Trends:', trendsResponse)
-        console.log('Latest Consultation:', latestConsultationResponse)
-
         setLatestConsultation(latestConsultationResponse || null)
+        
+        // Check if latest consultation is in the past, if so set to null
+        if (latestConsultationResponse && latestConsultationResponse.slot) {
+          const consultationDate = new Date(latestConsultationResponse.slot.startTime);
+          const now = new Date();
+          if (consultationDate < now) {
+            setLatestConsultation(null);
+          }
+        }
         
         setMonthlySummary(summaryResponse || null)
         setTrendsData(trendsResponse || null)
       } catch (error) {
-        console.error('Error fetching dashboard data:', error)
+        // Error handled silently or with user-friendly message
       } finally {
         setLoading(false)
       }
@@ -244,18 +242,6 @@ const Dashboard = () => {
               </p>
             </div>
           </div>
-
-          {/* <button
-            onClick={toggleDarkMode}
-            className="p-2 transition-opacity rounded-lg hover:opacity-80"
-            style={{
-              backgroundColor: 'var(--color-bg-tertiary)',
-              color: 'var(--color-text-primary)',
-            }}
-            aria-label="Toggle dark mode"
-          >
-            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button> */}
         </header>
 
         {/* Main Scrollable Content */}

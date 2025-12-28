@@ -108,6 +108,22 @@ export const getAllCoachSlots = async (date: string): Promise<CoachWithSlots[]> 
 };
 
 /**
+ * Get slot availability for date range (OPTIMIZED for calendar)
+ * GET /api/v1/employee/coaches/slots/range?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&coachId=uuid
+ * Returns a map of dates to availability status - single request for entire month
+ */
+export const getSlotAvailabilityRange = async (
+  startDate: string,
+  endDate: string,
+  coachId?: string,
+): Promise<Record<string, { hasSlots: boolean; slotCount: number }>> => {
+  const response = await axiosInstance.get('/employee/coaches/slots/range', {
+    params: { startDate, endDate, coachId },
+  });
+  return response.data;
+};
+
+/**
  * Book a consultation session
  * POST /api/v1/employee/consultations/book
  */
@@ -134,10 +150,13 @@ export const bookConsultation = async (data: {
  * GET /api/v1/employee/consultations
  * @param filter - Optional filter: 'past' | 'upcoming' | 'thisWeek' | 'thisMonth'
  */
-export const getMyConsultations = async (filter?: string): Promise<Consultation[]> => {
-  const response = await axiosInstance.get('/employee/consultations', {
-    params: filter ? { filter } : {},
-  });
+export const getMyConsultations = async (filter?: string, startDate?: string, endDate?: string): Promise<Consultation[]> => {
+  const params: any = {};
+  if (filter) params.filter = filter;
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+  
+  const response = await axiosInstance.get('/employee/consultations', { params });
   return response.data;
 };
 

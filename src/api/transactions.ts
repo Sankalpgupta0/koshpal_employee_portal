@@ -113,7 +113,6 @@ export interface GetTransactionsParams {
  * GET /api/v1/employee/transactions
  */
 export const getTransactionsByEmployeeId = async (
-  employeeId: string,
   params?: GetTransactionsParams
 ): Promise<TransactionsResponse> => {
   const response = await axiosInstance.get('/employee/transactions', { params });
@@ -143,7 +142,7 @@ export const getTransactionsByEmployeeId = async (
  * Get employee transaction summary (insights)
  * GET /api/v1/employee/insights/summary
  */
-export const getEmployeeTransactionSummary = async (employeeId: string): Promise<TransactionSummaryResponse> => {
+export const getEmployeeTransactionSummary = async (): Promise<TransactionSummaryResponse> => {
   const response = await axiosInstance.get('/employee/insights/summary');
   return {
     success: true,
@@ -173,7 +172,7 @@ export const addTransaction = async (data: AddTransactionRequest) => {
  * Bulk add transactions (not implemented in backend)
  * POST /api/transactions/bulk
  */
-export const bulkAddTransactions = async (data: BulkAddTransactionsRequest) => {
+export const bulkAddTransactions = async () => {
   throw new Error('Bulk transactions not implemented in backend yet');
 };
 
@@ -181,7 +180,7 @@ export const bulkAddTransactions = async (data: BulkAddTransactionsRequest) => {
  * Recalculate spending summary for an employee (not needed - backend auto-calculates)
  * POST /api/transactions/:employeeId/recalculate
  */
-export const recalculateSpendingSummary = async (employeeId: string) => {
+export const recalculateSpendingSummary = async () => {
   // Backend auto-calculates, this is a no-op
   return { message: 'Backend auto-calculates summaries' };
 };

@@ -35,7 +35,6 @@ const AddGoalModal = ({ isOpen, onClose, onSubmit }: AddGoalModalProps) => {
       goalDate: formData.goalDate,
     }
 
-    console.log('New Goal Data:', goalData)
     onSubmit(goalData)
     
     // Reset form

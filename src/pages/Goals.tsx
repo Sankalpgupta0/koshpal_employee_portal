@@ -79,7 +79,7 @@ const Goals = () => {
 
         console.log('Fetching goals for user:', userId)
 
-        const response = await getFinancialGoalsByEmployeeId(userId)
+        const response = await getFinancialGoalsByEmployeeId()
 
         console.log('Financial Goals:', response.financialGoals)
 
@@ -114,16 +114,13 @@ const Goals = () => {
       console.log('Goal data:', newGoal)
 
       try {
-        await addGoal(userId, newGoal)
+        await addGoal(newGoal)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         // If financial goals document doesn't exist (404), create it first
         if (error.response?.status === 404) {
           console.log('Financial goals document not found, creating new one')
-          await createFinancialGoals({
-            employeeId: userId,
-            financialGoals: [newGoal]
-          })
+          await createFinancialGoals()
         } else {
           throw error
         }
@@ -132,7 +129,7 @@ const Goals = () => {
       console.log('Goal added successfully')
 
       // Refresh goals list
-      const updatedResponse = await getFinancialGoalsByEmployeeId(userId)
+      const updatedResponse = await getFinancialGoalsByEmployeeId()
       const sortedGoals = (updatedResponse.financialGoals || []).sort((a, b) => {
         const dateA = new Date(a.goalDate).getTime()
         const dateB = new Date(b.goalDate).getTime()
@@ -154,18 +151,15 @@ const Goals = () => {
     if (!selectedGoal?._id) return
 
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
-      const userId = user._id
-
       console.log('Updating goal:', selectedGoal._id)
       console.log('Updated data:', updatedGoal)
 
-      await updateGoal(userId, selectedGoal._id, updatedGoal)
+      await updateGoal(selectedGoal._id, updatedGoal)
 
       console.log('Goal updated successfully')
 
       // Refresh goals list
-      const updatedResponse = await getFinancialGoalsByEmployeeId(userId)
+      const updatedResponse = await getFinancialGoalsByEmployeeId()
       const sortedGoals = (updatedResponse.financialGoals || []).sort((a, b) => {
         const dateA = new Date(a.goalDate).getTime()
         const dateB = new Date(b.goalDate).getTime()
@@ -198,12 +192,9 @@ const Goals = () => {
     if (!goalToDelete) return
 
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
-      const userId = user._id
-
       console.log('Deleting goal:', goalToDelete)
 
-      await deleteGoal(userId, goalToDelete)
+      await deleteGoal(goalToDelete)
 
       console.log('Goal deleted successfully')
 

@@ -6,7 +6,7 @@ import YourSession from '../components/YourSession'
 import BookingModal from '../components/BookingModal'
 import ViewDetailsModal from '../components/ViewDetailsModal'
 import TipsModal from '../components/TipsModal'
-import { getCoaches, getAllCoachSlots, bookConsultation } from '../api/coaches'
+import { getCoaches, getAllCoachSlots, getSlotAvailabilityRange, bookConsultation } from '../api/coaches'
 import type { Coach, CoachSlot, Consultation } from '../api/coaches'
 import { getEmployeeLatestConsultation } from '../api/employee'
 
@@ -28,7 +28,6 @@ interface Advisor {
 const Sessions = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const [isDarkMode, setIsDarkMode] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebarCollapsed')
@@ -109,7 +108,18 @@ const Sessions = () => {
 
         const latestConsultationResponse = await getEmployeeLatestConsultation();
         console.log("latest Consultation : " , latestConsultationResponse);
-        setLatestConsultation(latestConsultationResponse);
+        
+        // Check if latest consultation is in the past, if so set to null
+        let finalLatestConsultation = latestConsultationResponse;
+        if (latestConsultationResponse && latestConsultationResponse.slot) {
+          const consultationDate = new Date(latestConsultationResponse.slot.startTime);
+          const now = new Date();
+          if (consultationDate < now) {
+            finalLatestConsultation = null;
+          }
+        }
+        
+        setLatestConsultation(finalLatestConsultation);
         
         setAdvisors(transformedAdvisors)
       } catch (error) {
@@ -129,32 +139,25 @@ const Sessions = () => {
         try {
           const year = currentMonth.getFullYear()
           const month = currentMonth.getMonth()
-          const daysInMonth = new Date(year, month + 1, 0).getDate()
-          const datesSet = new Set<string>()
           
-          // Fetch slots for each day in the month using optimized endpoint
-          // This fetches all coaches' slots, but we filter for selected coach
-          const promises = []
-          for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(year, month, day)
-            // Use UTC date string to avoid timezone shifts
-            const year_utc = date.getFullYear()
-            const month_utc = String(date.getMonth() + 1).padStart(2, '0')
-            const day_utc = String(date.getDate()).padStart(2, '0')
-            const dateStr = `${year_utc}-${month_utc}-${day_utc}`
-            promises.push(
-              getAllCoachSlots(dateStr)
-                .then(coachesWithSlots => {
-                  // Check if selected coach has slots on this date
-                  const coachData = coachesWithSlots.find(c => c.coachId === selectedAdvisor.id)
-                  if (coachData && coachData.slots.length > 0) {
-                    datesSet.add(dateStr)
-                  }
-                })
-                .catch(() => {})
-            )
-          }
-          await Promise.all(promises)
+          // Calculate first and last day of month
+          const firstDay = new Date(year, month, 1)
+          const lastDay = new Date(year, month + 1, 0)
+          
+          // Format dates as YYYY-MM-DD
+          const startDate = `${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, '0')}-${String(firstDay.getDate()).padStart(2, '0')}`
+          const endDate = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`
+          
+          // Fetch availability for entire month in a single API call
+          const availability = await getSlotAvailabilityRange(startDate, endDate, selectedAdvisor.id)
+          
+          // Convert to Set of dates with slots
+          const datesSet = new Set<string>(
+            Object.entries(availability)
+              .filter(([_, data]) => data.hasSlots)
+              .map(([date]) => date)
+          )
+          
           setDatesWithSlots(datesSet)
         } catch (error) {
           console.error('Error fetching month slots:', error)
@@ -206,38 +209,9 @@ const Sessions = () => {
     }
   }, [selectedDate, selectedAdvisor])
 
-  // Theme management
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme')
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true)
-      document.documentElement.setAttribute('data-theme', 'dark')
-    }
-  }, [])
-
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', String(isSidebarCollapsed))
   }, [isSidebarCollapsed])
-
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      navigate('/login')
-    }
-  }, [navigate])
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode
-    setIsDarkMode(newMode)
-    if (newMode) {
-      document.documentElement.setAttribute('data-theme', 'dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.removeAttribute('data-theme')
-      localStorage.setItem('theme', 'light')
-    }
-  }
 
   const getSpecialtyStyles = (color: string) => {
     switch (color) {
@@ -506,7 +480,7 @@ const Sessions = () => {
           style={{
             backgroundColor: 'var(--color-bg-card)',
             borderColor: 'var(--color-border-primary)',
-            height: '60px',
+            height: '89px',
           }}
         >
           {/* Hamburger Menu - Mobile Only */}

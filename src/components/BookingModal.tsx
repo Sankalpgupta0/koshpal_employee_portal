@@ -1,3 +1,4 @@
+import React from 'react'
 import { X, ChevronLeft, ChevronRight, Clock, Calendar, Check, Video } from 'lucide-react'
 
 interface Advisor {
@@ -35,7 +36,7 @@ interface BookingModalProps {
   formatDate: (date: Date | null) => string
   formatDateShort: (date: Date | null) => string
   formatMonthYear: (date: Date) => string
-  renderCalendar: () => JSX.Element[]
+  renderCalendar: () => React.JSX.Element[]
 }
 
 const BookingModal = ({

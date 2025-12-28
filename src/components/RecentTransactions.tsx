@@ -36,7 +36,7 @@ const RecentTransactions = ({ employeeId }: RecentTransactionsProps) => {
           return
         }
 
-        const response = await getTransactionsByEmployeeId(userId, {
+        const response = await getTransactionsByEmployeeId({
           limit: 10,
           skip: 0,
         })
