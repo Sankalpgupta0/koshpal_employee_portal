@@ -72,7 +72,7 @@ const Transactions = () => {
           return
         }
 
-        const response = await getTransactionsByEmployeeId(userId)
+        const response = await getTransactionsByEmployeeId()
 
         // Map API transactions to component format
         const mappedTransactions: Transaction[] = response.data.map((txn: APITransaction) => ({

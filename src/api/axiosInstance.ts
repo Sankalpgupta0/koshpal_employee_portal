@@ -27,6 +27,7 @@ export const axiosInstance = axios.create({
 // Request interceptor - adds CSRF token to all non-GET requests
 axiosInstance.interceptors.request.use(
   (config) => {
+    console.log(`[Employee Portal API] ${config.method?.toUpperCase()} ${config.url}`);
     // Add CSRF token for state-changing requests
     if (config.method && !['get', 'head', 'options'].includes(config.method.toLowerCase())) {
       const csrfToken = getCsrfToken();
@@ -37,14 +38,19 @@ axiosInstance.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('[Employee Portal API] Request error:', error);
     return Promise.reject(error);
   }
 );
 
 // Response interceptor for error handling
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`[Employee Portal API] ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    return response;
+  },
   async (error) => {
+    console.error(`[Employee Portal API] Response error for ${error.config?.method?.toUpperCase()} ${error.config?.url}:`, error.response?.status, error.response?.data || error.message);
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {

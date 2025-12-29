@@ -115,27 +115,64 @@ export interface GetTransactionsParams {
 export const getTransactionsByEmployeeId = async (
   params?: GetTransactionsParams
 ): Promise<TransactionsResponse> => {
-  const response = await axiosInstance.get('/employee/transactions', { params });
-  // Map backend response to frontend format
-  return {
-    success: true,
-    count: response.data.length,
-    data: response.data.map((t: any) => ({
-      _id: t.id,
-      employeeId: t.userId,
-      amount: Number(t.amount),
-      currency: 'INR',
-      txnType: t.type === 'INCOME' ? 'CREDIT' : 'DEBIT',
-      transactionDate: t.transactionDate,
-      merchant: t.description,
-      categoryName: t.category,
-      isStarred: false,
-      includeInCashFlow: true,
-      source: t.source,
-      createdAt: t.createdAt,
-      updatedAt: t.createdAt,
-    })),
-  };
+  try {
+    // Validate params if provided
+    if (params && typeof params !== 'object') {
+      console.error('Invalid params passed to getTransactionsByEmployeeId:', params);
+      return {
+        success: false,
+        count: 0,
+        data: [],
+      };
+    }
+
+    const response = await axiosInstance.get('/employee/transactions', { params });
+
+    // Validate response data
+    if (!response.data) {
+      console.error('No data received from transactions API');
+      return {
+        success: false,
+        count: 0,
+        data: [],
+      };
+    }
+
+    // Ensure response.data is an array
+    const transactions = Array.isArray(response.data) ? response.data : [];
+
+    // Map backend response to frontend format
+    return {
+      success: true,
+      count: transactions.length,
+      data: transactions.map((t: any) => ({
+        _id: t.id,
+        employeeId: t.userId,
+        amount: Number(t.amount),
+        currency: 'INR',
+        txnType: t.type === 'INCOME' ? 'CREDIT' : 'DEBIT',
+        transactionDate: t.transactionDate,
+        merchant: t.description,
+        categoryName: t.category,
+        isStarred: false,
+        includeInCashFlow: true,
+        source: t.source,
+        createdAt: t.createdAt,
+        updatedAt: t.createdAt,
+      })),
+    };
+  } catch (error: any) {
+    console.error('Error fetching transactions:', error);
+    // Check if it's an authentication error
+    if (error.response?.status === 401) {
+      console.error('Authentication error - user may need to log in again');
+    }
+    return {
+      success: false,
+      count: 0,
+      data: [],
+    };
+  }
 };
 
 /**
@@ -143,11 +180,19 @@ export const getTransactionsByEmployeeId = async (
  * GET /api/v1/employee/insights/summary
  */
 export const getEmployeeTransactionSummary = async (): Promise<TransactionSummaryResponse> => {
-  const response = await axiosInstance.get('/employee/insights/summary');
-  return {
-    success: true,
-    data: response.data,
-  };
+  try {
+    const response = await axiosInstance.get('/employee/insights/summary');
+    return {
+      success: true,
+      data: response.data || {},
+    };
+  } catch (error) {
+    console.error('Error fetching transaction summary:', error);
+    return {
+      success: false,
+      data: {},
+    };
+  }
 };
 
 /**
@@ -155,17 +200,22 @@ export const getEmployeeTransactionSummary = async (): Promise<TransactionSummar
  * POST /api/v1/employee/transactions
  */
 export const addTransaction = async (data: AddTransactionRequest) => {
-  const backendData = {
-    accountId: data.employeeId, // Will need to map to actual account
-    amount: data.amount,
-    type: data.txn_type === 'CREDIT' ? 'INCOME' : 'EXPENSE',
-    category: data.category_name || 'Other',
-    description: data.merchant || data.message_body,
-    source: data.source || 'MANUAL',
-    transactionDate: data.transactionDate || new Date().toISOString(),
-  };
-  const response = await axiosInstance.post('/employee/transactions', backendData);
-  return response.data;
+  try {
+    const backendData = {
+      accountId: data.employeeId, // Will need to map to actual account
+      amount: data.amount,
+      type: data.txn_type === 'CREDIT' ? 'INCOME' : 'EXPENSE',
+      category: data.category_name || 'Other',
+      description: data.merchant || data.message_body,
+      source: data.source || 'MANUAL',
+      transactionDate: data.transactionDate || new Date().toISOString(),
+    };
+    const response = await axiosInstance.post('/employee/transactions', backendData);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding transaction:', error);
+    throw error;
+  }
 };
 
 /**

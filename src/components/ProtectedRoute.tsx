@@ -31,8 +31,21 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         // Verify the httpOnly cookie is still valid by calling /me endpoint
         await axiosInstance.get('/auth/me')
         setIsAuthenticated(true)
-      } catch (error) {
+      } catch (error: any) {
+        console.error('Authentication check failed:', error?.response?.status, error?.message)
+        
+        // Clear localStorage
         localStorage.removeItem('user')
+        
+        // If it's a 403 (Forbidden), try to clear server-side cookies too
+        if (error?.response?.status === 403) {
+          try {
+            await axiosInstance.post('/auth/logout')
+          } catch (logoutError) {
+            console.log('Logout failed, but continuing')
+          }
+        }
+        
         setIsAuthenticated(false)
       }
     }

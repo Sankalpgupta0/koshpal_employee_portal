@@ -94,6 +94,9 @@ function Login() {
           <p className="text-sm sm:text-base" style={{ color: 'var(--color-text-secondary)' }}>
             Sign in to access your financial dashboard
           </p>
+          <p className="text-xs mt-2" style={{ color: 'var(--color-text-secondary)' }}>
+            Demo: employee@abc.com / password123
+          </p>
         </div>
 
         {/* Form */}
