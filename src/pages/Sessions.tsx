@@ -764,14 +764,17 @@ const Sessions = () => {
         selectedTime={selectedTime}
         notes={notes}
         currentMonth={currentMonth}
-        timeSlots={availableSlots.length > 0 
+        timeSlots={availableSlots.length > 0
           ? availableSlots.map(slot => {
-              const time = new Date(slot.startTime).toLocaleTimeString('en-US', { 
+              // Convert to IST for display (times are stored in IST)
+              const istTime = new Date(slot.startTime);
+              const timeString = istTime.toLocaleTimeString('en-IN', { 
                 hour: 'numeric', 
                 minute: '2-digit',
-                hour12: true 
+                hour12: true,
+                timeZone: 'Asia/Kolkata'
               })
-              return time
+              return timeString
             })
           : (loadingSlots ? ['Loading slots...'] : ['No slots available'])
         }
@@ -782,10 +785,12 @@ const Sessions = () => {
           setSelectedTime(time)
           // Find the corresponding slot ID
           const slot = availableSlots.find(s => {
-            const slotTime = new Date(s.startTime).toLocaleTimeString('en-US', { 
+            const istTime = new Date(s.startTime);
+            const slotTime = istTime.toLocaleTimeString('en-IN', { 
               hour: 'numeric', 
               minute: '2-digit',
-              hour12: true 
+              hour12: true,
+              timeZone: 'Asia/Kolkata'
             })
             return slotTime === time
           })
