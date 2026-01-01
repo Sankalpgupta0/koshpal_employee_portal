@@ -179,13 +179,19 @@ const Sessions = () => {
           const day = String(selectedDate.getDate()).padStart(2, '0')
           const dateStr = `${year}-${month}-${day}`
           
+          console.log('Fetching slots for date:', dateStr, 'coach:', selectedAdvisor.id)
+          
           // Use optimized endpoint to get all coaches' slots
           const coachesWithSlots = await getAllCoachSlots(dateStr)
+          
+          console.log('Received coaches with slots:', coachesWithSlots)
           
           // Filter for selected coach and transform to CoachSlot format
           const coachData = coachesWithSlots.find(c => c.coachId === selectedAdvisor.id)
           
-          if (coachData) {
+          console.log('Coach data for selected advisor:', coachData)
+          
+          if (coachData && coachData.slots.length > 0) {
             const transformedSlots: CoachSlot[] = coachData.slots.map(slot => ({
               id: slot.slotId,
               coachId: selectedAdvisor.id,
@@ -194,8 +200,10 @@ const Sessions = () => {
               endTime: slot.endTime,
               status: 'AVAILABLE' as const,
             }))
+            console.log('Transformed slots:', transformedSlots)
             setAvailableSlots(transformedSlots)
           } else {
+            console.log('No slots found for this coach on this date')
             setAvailableSlots([])
           }
         } catch (error) {
@@ -206,6 +214,9 @@ const Sessions = () => {
         }
       }
       fetchSlots()
+    } else if (!selectedDate) {
+      // Clear slots when date is deselected
+      setAvailableSlots([])
     }
   }, [selectedDate, selectedAdvisor])
 
@@ -764,8 +775,10 @@ const Sessions = () => {
         selectedTime={selectedTime}
         notes={notes}
         currentMonth={currentMonth}
-        timeSlots={availableSlots.length > 0
-          ? availableSlots.map(slot => {
+        loadingSlots={loadingSlots}
+        timeSlots={loadingSlots 
+          ? [] 
+          : availableSlots.map(slot => {
               // Convert to IST for display (times are stored in IST)
               const istTime = new Date(slot.startTime);
               const timeString = istTime.toLocaleTimeString('en-IN', { 
@@ -776,7 +789,6 @@ const Sessions = () => {
               })
               return timeString
             })
-          : (loadingSlots ? ['Loading slots...'] : ['No slots available'])
         }
         onClose={handleCloseModal}
         onNext={handleNextStep}

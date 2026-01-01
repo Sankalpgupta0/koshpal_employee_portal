@@ -25,6 +25,7 @@ interface BookingModalProps {
   notes: string
   currentMonth: Date
   timeSlots: string[]
+  loadingSlots?: boolean
   onClose: () => void
   onNext: () => void
   onPrevious: () => void
@@ -48,6 +49,7 @@ const BookingModal = ({
   notes,
   currentMonth,
   timeSlots,
+  loadingSlots = false,
   onClose,
   onNext,
   onPrevious,
@@ -250,21 +252,51 @@ const BookingModal = ({
                       Available Time Slots
                     </label>
                     <div className="space-y-1.5 sm:space-y-2 max-h-[300px] overflow-y-auto">
-                      {timeSlots.map((time) => (
-                        <button
-                          key={time}
-                          onClick={() => onSelectTime(time)}
-                          className="w-full px-3 py-2 sm:py-2.5 rounded-lg text-left flex items-center gap-2 hover:bg-opacity-80 transition-colors"
+                      {loadingSlots ? (
+                        <div 
+                          className="px-3 py-8 rounded-lg text-center"
                           style={{
-                            backgroundColor: selectedTime === time ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
-                            color: selectedTime === time ? 'white' : 'var(--color-text-primary)',
-                            border: `1px solid ${selectedTime === time ? 'var(--color-primary)' : 'var(--color-border-primary)'}`,
+                            backgroundColor: 'var(--color-bg-secondary)',
+                            border: '1px solid var(--color-border-primary)',
                           }}
                         >
-                          <Clock className="w-4 h-4" />
-                          <span className="text-sm font-medium">{time}</span>
-                        </button>
-                      ))}
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" 
+                                 style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }}></div>
+                            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                              Loading available slots...
+                            </p>
+                          </div>
+                        </div>
+                      ) : timeSlots.length === 0 ? (
+                        <div 
+                          className="px-3 py-8 rounded-lg text-center"
+                          style={{
+                            backgroundColor: 'var(--color-bg-secondary)',
+                            border: '1px solid var(--color-border-primary)',
+                          }}
+                        >
+                          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                            {selectedDate ? 'No slots available for this date' : 'Please select a date first'}
+                          </p>
+                        </div>
+                      ) : (
+                        timeSlots.map((time) => (
+                          <button
+                            key={time}
+                            onClick={() => onSelectTime(time)}
+                            className="w-full px-3 py-2 sm:py-2.5 rounded-lg text-left flex items-center gap-2 hover:bg-opacity-80 transition-colors"
+                            style={{
+                              backgroundColor: selectedTime === time ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
+                              color: selectedTime === time ? 'white' : 'var(--color-text-primary)',
+                              border: `1px solid ${selectedTime === time ? 'var(--color-primary)' : 'var(--color-border-primary)'}`,
+                            }}
+                          >
+                            <Clock className="w-4 h-4" />
+                            <span className="text-sm font-medium">{time}</span>
+                          </button>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
@@ -519,7 +551,7 @@ const BookingModal = ({
               <button
                 onClick={onNext}
                 disabled={
-                  (currentStep === 1 && (!selectedDate || !selectedTime)) ||
+                  (currentStep === 1 && (!selectedDate || !selectedTime || timeSlots.length === 0)) ||
                   (currentStep === 2 && false)
                 }
                 className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-semibold text-xs sm:text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5 sm:gap-2 disabled:opacity-50 disabled:cursor-not-allowed"

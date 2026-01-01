@@ -188,9 +188,30 @@ export const getEmployeeTransactionSummary = async (): Promise<TransactionSummar
     };
   } catch (error) {
     console.error('Error fetching transaction summary:', error);
+    // Return a default SpendingSummary object for error cases
+    const defaultSpendingSummary: SpendingSummary = {
+      employeeId: '',
+      totalIncome: 0,
+      totalSpending: 0,
+      netSavings: 0,
+      savingsRate: 0,
+      categories: {},
+      monthlyData: [],
+      totalTransactions: 0,
+      largestTransaction: {
+        amount: 0,
+        merchant: null,
+        date: '',
+        type: 'DEBIT'
+      },
+      mostFrequentCategory: null,
+      averageMonthlyIncome: 0,
+      averageMonthlySpending: 0,
+      lastCalculated: new Date().toISOString()
+    };
     return {
       success: false,
-      data: {},
+      data: defaultSpendingSummary,
     };
   }
 };
