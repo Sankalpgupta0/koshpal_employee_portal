@@ -2,6 +2,7 @@ import { Clock, ExternalLink, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import Toast from './Toast'
+import { formatUTCToISTDateTime } from '../utils/timezone'
 
 interface Session {
   id: string
@@ -100,15 +101,7 @@ const YourSession = ({ sessionDetails }: YourSessionProps) => {
                   style={{ color: 'var(--color-text-secondary)' }}
                 >
                   {currentSession?.slot?.startTime
-                    ? new Date(currentSession.slot.startTime).toLocaleString('en-IN', {
-                      timeZone: 'Asia/Kolkata',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true,
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                    })
+                    ? formatUTCToISTDateTime(currentSession.slot.startTime)
                     : ''}
                 </span>
 
