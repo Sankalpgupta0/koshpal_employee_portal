@@ -7,7 +7,7 @@ import BookingModal from '../components/BookingModal'
 import ViewDetailsModal from '../components/ViewDetailsModal'
 import TipsModal from '../components/TipsModal'
 import { getCoaches, bookConsultation } from '../api/coaches'
-import { getSlotsByDate, getSlotsByCoachAndDate, getAvailableDates } from '../api/slots'
+import { getSlotsByCoachAndDate, getAvailableDates } from '../api/slots'
 import type { Coach, CoachSlot, Consultation } from '../api/coaches'
 import { getEmployeeLatestConsultation } from '../api/employee'
 import { dateToISTDateString, formatUTCToISTTime } from '../utils/timezone'
@@ -323,19 +323,16 @@ const Sessions = () => {
             const day = String(selectedDate.getDate()).padStart(2, '0')
             const dateStr = `${year}-${month}-${day}`
             try {
-              const coachesWithSlots = await getAllCoachSlots(dateStr)
-              const coachData = coachesWithSlots.find(c => c.coachId === selectedAdvisor.id)
-              if (coachData) {
-                const transformedSlots: CoachSlot[] = coachData.slots.map(slot => ({
-                  id: slot.slotId,
-                  coachId: selectedAdvisor.id,
-                  date: dateStr,
-                  startTime: slot.startTime,
-                  endTime: slot.endTime,
-                  status: 'AVAILABLE' as const,
-                }))
-                setAvailableSlots(transformedSlots)
-              }
+              const coachesWithSlots = await getSlotsByCoachAndDate(selectedAdvisor.id, dateStr)
+              const transformedSlots: CoachSlot[] = coachesWithSlots.slots.map((slot: any) => ({
+                id: slot.slotId,
+                coachId: selectedAdvisor.id,
+                date: dateStr,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+                status: 'AVAILABLE' as const,
+              }))
+              setAvailableSlots(transformedSlots)
             } catch (refreshError) {
               console.error('Error refreshing slots:', refreshError)
             }
