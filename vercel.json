@@ -1,5 +1,9 @@
 {
   "rewrites": [
+    {
+      "source": "/api/_analytics/:match*",
+      "destination": "https://us.i.posthog.com/:match*"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

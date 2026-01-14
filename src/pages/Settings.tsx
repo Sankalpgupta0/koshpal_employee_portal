@@ -5,6 +5,7 @@ import Sidebar from '../components/Sidebar'
 import { getEmployeeById, updateEmployee, type Employee } from '../api/employee'
 import { axiosInstance } from '../api/axiosInstance'
 import Toast from '../components/Toast'
+import { analytics } from '../analytics'
 
 const Settings = () => {
   const navigate = useNavigate()
@@ -223,6 +224,9 @@ const Settings = () => {
     } catch (error) {
       // Continue logout even if API call fails
     }
+    
+    // Reset analytics
+    analytics.resetAnalytics();
     
     // Clear localStorage data
     localStorage.removeItem('user')
