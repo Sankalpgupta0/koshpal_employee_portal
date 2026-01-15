@@ -1,4 +1,5 @@
 import { X, Calendar, Clock, Check, Video } from 'lucide-react'
+import { formatUTCToISTTime } from '../utils/timezone'
 
 interface Advisor {
   id: string
@@ -91,11 +92,7 @@ const ViewDetailsModal = ({
           availabilityStatus: 'available' as const,
         },
         date: new Date(consultationData.slot.date),
-        time: new Date(consultationData.slot.startTime).toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true,
-        }),
+        time: formatUTCToISTTime(consultationData.slot.startTime),
         notes: consultationData.notes || '',
         employee: 'You',
         meetingLink: consultationData.meetingLink,

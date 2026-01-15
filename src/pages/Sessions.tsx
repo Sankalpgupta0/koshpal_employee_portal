@@ -6,9 +6,11 @@ import YourSession from '../components/YourSession'
 import BookingModal from '../components/BookingModal'
 import ViewDetailsModal from '../components/ViewDetailsModal'
 import TipsModal from '../components/TipsModal'
-import { getCoaches, getAllCoachSlots, getSlotAvailabilityRange, bookConsultation } from '../api/coaches'
+import { getCoaches, bookConsultation } from '../api/coaches'
+import { getSlotsByCoachAndDate, getAvailableDates } from '../api/slots'
 import type { Coach, CoachSlot, Consultation } from '../api/coaches'
 import { getEmployeeLatestConsultation } from '../api/employee'
+import { dateToISTDateString, formatUTCToISTTime } from '../utils/timezone'
 
 interface Advisor {
   id: string
@@ -148,8 +150,8 @@ const Sessions = () => {
           const startDate = `${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, '0')}-${String(firstDay.getDate()).padStart(2, '0')}`
           const endDate = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`
           
-          // Fetch availability for entire month in a single API call
-          const availability = await getSlotAvailabilityRange(startDate, endDate, selectedAdvisor.id)
+          // NEW API: Fetch availability for entire month
+          const availability = await getAvailableDates(startDate, endDate, selectedAdvisor.id)
           
           // Convert to Set of dates with slots
           const datesSet = new Set<string>(
@@ -173,32 +175,25 @@ const Sessions = () => {
       const fetchSlots = async () => {
         try {
           setLoadingSlots(true)
-          // Use local date components to avoid timezone shifts
-          const year = selectedDate.getFullYear()
-          const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
-          const day = String(selectedDate.getDate()).padStart(2, '0')
-          const dateStr = `${year}-${month}-${day}`
+          // Convert selected date to YYYY-MM-DD string (IST)
+          const selectedDateStr = dateToISTDateString(selectedDate)
           
-          console.log('Fetching slots for date:', dateStr, 'coach:', selectedAdvisor.id)
+          console.log('Fetching slots for date:', selectedDateStr, 'coach:', selectedAdvisor.id)
           
-          // Use optimized endpoint to get all coaches' slots
-          const coachesWithSlots = await getAllCoachSlots(dateStr)
+          // NEW API: Get slots for specific coach and date
+          const coachData = await getSlotsByCoachAndDate(selectedAdvisor.id, selectedDateStr)
           
-          console.log('Received coaches with slots:', coachesWithSlots)
-          
-          // Filter for selected coach and transform to CoachSlot format
-          const coachData = coachesWithSlots.find(c => c.coachId === selectedAdvisor.id)
-          
-          console.log('Coach data for selected advisor:', coachData)
+          console.log('Received coach data:', coachData)
           
           if (coachData && coachData.slots.length > 0) {
             const transformedSlots: CoachSlot[] = coachData.slots.map(slot => ({
               id: slot.slotId,
               coachId: selectedAdvisor.id,
-              date: dateStr,
+              date: selectedDateStr,
               startTime: slot.startTime,
               endTime: slot.endTime,
-              status: 'AVAILABLE' as const,
+              slotDate: slot.slotDate,
+              status: (slot.status || 'AVAILABLE') as 'AVAILABLE' | 'BOOKED' | 'CANCELLED',
             }))
             console.log('Transformed slots:', transformedSlots)
             setAvailableSlots(transformedSlots)
@@ -328,19 +323,16 @@ const Sessions = () => {
             const day = String(selectedDate.getDate()).padStart(2, '0')
             const dateStr = `${year}-${month}-${day}`
             try {
-              const coachesWithSlots = await getAllCoachSlots(dateStr)
-              const coachData = coachesWithSlots.find(c => c.coachId === selectedAdvisor.id)
-              if (coachData) {
-                const transformedSlots: CoachSlot[] = coachData.slots.map(slot => ({
-                  id: slot.slotId,
-                  coachId: selectedAdvisor.id,
-                  date: dateStr,
-                  startTime: slot.startTime,
-                  endTime: slot.endTime,
-                  status: 'AVAILABLE' as const,
-                }))
-                setAvailableSlots(transformedSlots)
-              }
+              const coachesWithSlots = await getSlotsByCoachAndDate(selectedAdvisor.id, dateStr)
+              const transformedSlots: CoachSlot[] = coachesWithSlots.slots.map((slot: any) => ({
+                id: slot.slotId,
+                coachId: selectedAdvisor.id,
+                date: dateStr,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+                status: 'AVAILABLE' as const,
+              }))
+              setAvailableSlots(transformedSlots)
             } catch (refreshError) {
               console.error('Error refreshing slots:', refreshError)
             }
@@ -427,7 +419,9 @@ const Sessions = () => {
     // Current month days
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
-      const dateStr = date.toISOString().split('T')[0]
+      // CRITICAL: Format date as YYYY-MM-DD in local timezone, not UTC
+      // Backend returns slotDate in IST format (YYYY-MM-DD)
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       const isSelected = selectedDate?.toDateString() === date.toDateString()
       const hasSlots = datesWithSlots.has(dateStr)
       const isPast = date < new Date(new Date().setHours(0, 0, 0, 0))
@@ -779,15 +773,8 @@ const Sessions = () => {
         timeSlots={loadingSlots 
           ? [] 
           : availableSlots.map(slot => {
-              // Convert to IST for display (times are stored in IST)
-              const istTime = new Date(slot.startTime);
-              const timeString = istTime.toLocaleTimeString('en-IN', { 
-                hour: 'numeric', 
-                minute: '2-digit',
-                hour12: true,
-                timeZone: 'Asia/Kolkata'
-              })
-              return timeString
+              // Convert UTC timestamp to IST time for display
+              return formatUTCToISTTime(slot.startTime)
             })
         }
         onClose={handleCloseModal}
@@ -795,18 +782,13 @@ const Sessions = () => {
         onPrevious={handlePreviousStep}
         onSelectTime={(time) => {
           setSelectedTime(time)
-          // Find the corresponding slot ID
-          const slot = availableSlots.find(s => {
-            const istTime = new Date(s.startTime);
-            const slotTime = istTime.toLocaleTimeString('en-IN', { 
-              hour: 'numeric', 
-              minute: '2-digit',
-              hour12: true,
-              timeZone: 'Asia/Kolkata'
-            })
-            return slotTime === time
-          })
-          if (slot) setSelectedSlotId(slot.id)
+          // Find the corresponding slot ID by matching IST time
+          const matchingSlot = availableSlots.find(slot => 
+            formatUTCToISTTime(slot.startTime) === time
+          )
+          if (matchingSlot) {
+            setSelectedSlotId(matchingSlot.id)
+          }
         }}
         onSetNotes={setNotes}
         onPrevMonth={prevMonth}

@@ -14,23 +14,35 @@ export interface Coach {
   profilePhoto?: string;
 }
 
+/**
+ * CRITICAL: Slot interface with timezone-aware slotDate field.
+ * - startTime/endTime are ISO UTC timestamps
+ * - slotDate is the YYYY-MM-DD date in Asia/Kolkata timezone
+ * - Always use slotDate for filtering and matching against calendar dates
+ */
 export interface CoachSlot {
   id: string;
   coachId: string;
   date: string;
-  startTime: string;
-  endTime: string;
+  startTime: string; // ISO UTC timestamp
+  endTime: string; // ISO UTC timestamp
+  slotDate?: string; // YYYY-MM-DD in IST (from backend)
   status: 'AVAILABLE' | 'BOOKED' | 'CANCELLED';
 }
 
+/**
+ * CRITICAL: Slots from getAllCoachSlots endpoint now include slotDate
+ */
 export interface CoachWithSlots {
   coachId: string;
   coachName: string;
   expertise: string[];
   slots: Array<{
     slotId: string;
-    startTime: string;
-    endTime: string;
+    startTime: string; // ISO UTC timestamp
+    endTime: string; // ISO UTC timestamp
+    slotDate?: string; // YYYY-MM-DD in IST (NEW: from backend)
+    status?: string;
   }>;
 }
 
@@ -45,6 +57,7 @@ export interface Consultation {
     date: string;
     startTime: string;
     endTime: string;
+    slotDate?: string; // YYYY-MM-DD in IST
     status: 'AVAILABLE' | 'BOOKED' | 'CANCELLED';
   };
   coach: {

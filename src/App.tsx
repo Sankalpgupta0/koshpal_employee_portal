@@ -10,8 +10,12 @@ import Transactions from './pages/Transactions'
 import Settings from './pages/Settings'
 import ProtectedRoute from './components/ProtectedRoute'
 import { ToastProvider } from './components/ToastContainer'
+import { usePageTracking } from './hooks/usePageTracking'
 
 function App() {
+  // Track page views on route changes
+  usePageTracking();
+
   return (
     <ToastProvider>
       <Routes>

@@ -3,6 +3,7 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { loginEmployee } from '../api/employee'
 import { useToast } from '../components/ToastContainer'
+import { analytics } from '../analytics'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -48,6 +49,21 @@ function Login() {
       if (rememberMe) {
         localStorage.setItem('rememberMe', 'true')
       }
+      
+      // Identify user in analytics
+      analytics.identifyUser({
+        user_id: response.user._id,
+        email: response.user.email,
+        role: 'employee',
+        company_id: response.user.companyId,
+        name: response.user.name,
+      });
+      
+      // Track login event
+      analytics.trackFeature('user_logged_in', {
+        login_method: 'email',
+        remember_me: rememberMe,
+      });
       
       navigate('/dashboard')
     } catch (error: any) {

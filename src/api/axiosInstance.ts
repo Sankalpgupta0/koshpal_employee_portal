@@ -1,19 +1,5 @@
 import axios from 'axios';
 
-// Helper function to get CSRF token from cookie
-const getCsrfToken = (): string | null => {
-  const name = 'XSRF-TOKEN=';
-  const decodedCookie = decodeURIComponent(document.cookie);
-  const cookieArray = decodedCookie.split(';');
-  for (let cookie of cookieArray) {
-    cookie = cookie.trim();
-    if (cookie.indexOf(name) === 0) {
-      return cookie.substring(name.length);
-    }
-  }
-  return null;
-};
-
 // Create axios instance with default config
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1',
@@ -28,13 +14,6 @@ export const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     console.log(`[Employee Portal API] ${config.method?.toUpperCase()} ${config.url}`);
-    // Add CSRF token for state-changing requests
-    if (config.method && !['get', 'head', 'options'].includes(config.method.toLowerCase())) {
-      const csrfToken = getCsrfToken();
-      if (csrfToken) {
-        config.headers['X-CSRF-Token'] = csrfToken;
-      }
-    }
     return config;
   },
   (error) => {
