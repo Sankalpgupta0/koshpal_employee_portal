@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Menu, Moon, Sun, Settings as SettingsIcon, User, LogOut } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
-import { updateEmployee, getMyProfile, updateMyProfile, type Employee } from '../api/employee'
+import { getMyProfile, updateMyProfile } from '../api/employee'
 import { axiosInstance } from '../api/axiosInstance'
 import Toast from '../components/Toast'
 import { analytics } from '../analytics'
@@ -31,13 +31,11 @@ const Settings = () => {
   })
  
 
-  const [removeImage, setRemoveImage] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [profilePicture, setProfilePicture] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme')
@@ -109,8 +107,6 @@ const Settings = () => {
         navigate('/login')
         return
       }
-      
-      setUserId(employeeId)
       
       // Use cached data immediately as fallback
       if (user.name && user.email) {
@@ -232,7 +228,6 @@ const handleSaveChanges = async () => {
   }
 
   setSelectedFile(file) // ✅ FILE saved
-  setRemoveImage(false)
   // Preview only
   const reader = new FileReader()
   reader.onload = () => {
