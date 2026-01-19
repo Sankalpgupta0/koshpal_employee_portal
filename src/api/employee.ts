@@ -109,19 +109,19 @@ export const getEmployees = async (companyId: string, page = 1, limit = 10) => {
 /**
  * Get employee by ID (use auth/me for current user)
  */
-export const getEmployeeById = async (): Promise<Employee> => {
-  const response = await axiosInstance.get('/auth/me');
-  const user = response.data;
-  return {
-    _id: user.userId,
-    name: user.email,
-    email: user.email,
-    companyId: user.companyId || '',
-    role: user.role,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-};
+// export const getEmployeeById = async (): Promise<Employee> => {
+//   const response = await axiosInstance.get('/auth/me');
+//   const user = response.data;
+//   return {
+//     _id: user.userId,
+//     name: user.email,
+//     email: user.email,
+//     companyId: user.companyId || '',
+//     role: user.role,
+//     createdAt: new Date().toISOString(),
+//     updatedAt: new Date().toISOString(),
+//   };
+// };
 
 /**
  * Update employee details
@@ -129,6 +129,21 @@ export const getEmployeeById = async (): Promise<Employee> => {
 export const updateEmployee = async (employeeId: string, updates: UpdateEmployeeRequest) => {
   const response = await axiosInstance.put(`/employee/${employeeId}`, updates);
   return response.data;
+};
+
+
+export const updateMyProfile = async (data: FormData) => {
+  return axiosInstance.put('/employee/profile', data, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+
+export const getMyProfile = async () => {
+  const res = await axiosInstance.get('/employee/profile');
+  return res.data;
 };
 
 /**

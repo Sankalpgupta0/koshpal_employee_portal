@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Menu, Moon, Sun, Settings as SettingsIcon, User, LogOut } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
-import { getEmployeeById, updateEmployee, type Employee } from '../api/employee'
+import { updateEmployee, getMyProfile, updateMyProfile, type Employee } from '../api/employee'
 import { axiosInstance } from '../api/axiosInstance'
 import Toast from '../components/Toast'
 import { analytics } from '../analytics'
@@ -29,6 +29,10 @@ const Settings = () => {
     email: '',
     phone: '',
   })
+ 
+
+  const [removeImage, setRemoveImage] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [profilePicture, setProfilePicture] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -51,7 +55,9 @@ const Settings = () => {
     try {
       setLoading(true)
       // console.log('Fetching user data for employee ID:', employeeId)
-      const employee: Employee = await getEmployeeById()
+      // const employee: Employee = await getEmployeeById()
+       const data = await getMyProfile()
+       const employee=data;
       // console.log('Fetched employee data:', employee.data)
       
       // Split name into first and last name
@@ -67,8 +73,8 @@ const Settings = () => {
       }
       
       // Set profile picture if available
-      if (employee.profilePicture) {
-        setProfilePicture(employee.profilePicture)
+      if (employee.profilePhoto) {
+        setProfilePicture(employee.profilePhoto)
       }
       
       // console.log('Setting form data:', userData)
@@ -152,61 +158,49 @@ const Settings = () => {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSaveChanges = async () => {
-    if (!userId) {
-      console.error('No user ID available')
-      setToast({ message: 'User ID not found', type: 'error' })
-      return
-    }
-    
-    // Validation
-    if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      setToast({ message: 'First name and last name are required', type: 'error' })
-      return
-    }
-    
-    try {
-      setSaving(true)
-      const fullName = `${formData.firstName} ${formData.lastName}`.trim()
-      
-      console.log('Updating employee with ID:', userId)
-      console.log('Update data:', { name: fullName, phone: formData.phone })
-      
-      const response = await updateEmployee(userId, {
-        name: fullName,
-        phone: formData.phone,
-      })
-      
-      console.log('Update response:', response)
-      
-      // Update localStorage cache with new data
-      const userStr = localStorage.getItem('user')
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr)
-          user.name = fullName
-          user.phone = formData.phone
-          localStorage.setItem('user', JSON.stringify(user))
-          console.log('Updated localStorage cache')
-        } catch (e) {
-          console.error('Error updating localStorage:', e)
-        }
-      }
-      
-      setOriginalData(formData)
-      setToast({ message: 'Changes saved successfully!', type: 'success' })
-    } catch (error) {
-      console.error('Error saving changes:', error)
-      const axiosError = error as { response?: { data?: { message?: string } }; message?: string }
-      console.error('Error details:', axiosError.response?.data || axiosError.message)
-      setToast({ 
-        message: axiosError.response?.data?.message || 'Failed to save changes', 
-        type: 'error' 
-      })
-    } finally {
-      setSaving(false)
-    }
+const handleSaveChanges = async () => {
+  if (!formData.firstName.trim() || !formData.lastName.trim()) {
+    setToast({ message: 'First name and last name are required', type: 'error' })
+    return
   }
+
+  try {
+    setSaving(true)
+
+    const fullName = `${formData.firstName} ${formData.lastName}`.trim()
+
+    const fd = new FormData()
+    fd.append('name', fullName)
+    fd.append('phone', formData.phone)
+
+    // Handle profile picture update
+    if (selectedFile) {
+      fd.append('image', selectedFile) //  FILE, not string
+    }
+
+    await updateMyProfile(fd)
+
+    // Update local cache
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      const user = JSON.parse(userStr)
+      user.name = fullName
+      user.phone = formData.phone
+      localStorage.setItem('user', JSON.stringify(user))
+    }
+
+    setOriginalData(formData)
+    setToast({ message: 'Profile updated successfully!', type: 'success' })
+  } catch (error) {
+    setToast({ message: 'Failed to save changes', type: 'error' })
+  } finally {
+    setSaving(false)
+  }
+}
+
+
+  
+
 
   const handleCancel = () => {
     // Reset form to original values
@@ -216,6 +210,37 @@ const Settings = () => {
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
   }
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  if (!file.type.startsWith('image/')) {
+    setToast({ message: 'Please select an image file', type: 'error' })
+    return
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    setToast({ message: 'Image size should be less than 5MB', type: 'error' })
+    return
+  }
+
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg']
+  if (!allowedTypes.includes(file.type)) {
+    setToast({ message: 'Only JPG, PNG, JEPG allowed', type: 'error' })
+    return
+  }
+
+  setSelectedFile(file) // ✅ FILE saved
+  setRemoveImage(false)
+  // Preview only
+  const reader = new FileReader()
+  reader.onload = () => {
+    setProfilePicture(reader.result as string)
+  }
+  reader.readAsDataURL(file)
+}
+
 
   const handleLogout = async () => {
     try {
@@ -365,7 +390,15 @@ const Settings = () => {
                 >
                   {formData.email}
                 </p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  id="profile-image-input"
+                />
                 <button
+                  onClick={() => document.getElementById('profile-image-input')?.click()}
                   className="px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity"
                   style={{ backgroundColor: 'var(--color-primary)' }}
                 >
