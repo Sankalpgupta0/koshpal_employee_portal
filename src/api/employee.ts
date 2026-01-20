@@ -66,7 +66,10 @@ export const getEmployeeLatestConsultation = async () => {
  */
 export const loginEmployee = async (credentials: LoginRequest): Promise<LoginResponse> => {
   try {
-    const response = await axiosInstance.post('/auth/login', credentials);
+    const response = await axiosInstance.post('/auth/login', {
+      ...credentials,
+      role: 'EMPLOYEE' // Specify EMPLOYEE role for unified login
+    });
     // Backend now sets httpOnly cookies, response only contains user data
     const { user } = response.data;
     
