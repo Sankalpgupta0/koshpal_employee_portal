@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Resources from './pages/Resources'
 import Sessions from './pages/Sessions'
@@ -8,6 +7,7 @@ import Finances from './pages/Finances'
 import Goals from './pages/Goals'
 import Transactions from './pages/Transactions'
 import Settings from './pages/Settings'
+import Login from './pages/Login'
 import ProtectedRoute from './components/ProtectedRoute'
 import { ToastProvider } from './components/ToastContainer'
 import { usePageTracking } from './hooks/usePageTracking'
@@ -19,7 +19,11 @@ function App() {
   return (
     <ToastProvider>
       <Routes>
+      {/* Public login route */}
       <Route path="/login" element={<Login />} />
+      
+      {/* Redirect to dashboard - auth check handled by ProtectedRoute */}
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route
         path="/dashboard"
         element={

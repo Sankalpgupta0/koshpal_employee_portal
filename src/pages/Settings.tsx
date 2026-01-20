@@ -252,11 +252,8 @@ const handleSaveChanges = async () => {
     localStorage.removeItem('user')
     localStorage.removeItem('rememberMe')
     
-    // Navigate to login page
+    // Redirect to employee portal login page
     navigate('/login')
-    
-    // Show success toast
-    setToast({ message: 'Logged out successfully', type: 'success' })
   }
 
   return (
