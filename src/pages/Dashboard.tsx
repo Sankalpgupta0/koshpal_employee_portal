@@ -54,10 +54,10 @@ const Dashboard = () => {
     const currentDate = new Date()
     const month = currentDate.getMonth() + 1
     const year = currentDate.getFullYear()
-    
+
     try {
       await updateBudget({ month, year, budget: newBudget })
-      
+
       // Refresh the monthly summary to get updated budget
       const updatedSummary = await getLatestMonthlySummary()
       setMonthlySummary(updatedSummary || null)
@@ -79,7 +79,7 @@ const Dashboard = () => {
       try {
         const localUser = JSON.parse(localStorage.getItem('user') || '{}')
         setUser(localUser)
-        
+
         // Fetch latest monthly summary and trends data
         const [summaryResponse, trendsResponse, latestConsultationResponse] = await Promise.all([
           getLatestMonthlySummary(),
@@ -88,7 +88,7 @@ const Dashboard = () => {
         ])
 
         setLatestConsultation(latestConsultationResponse || null)
-        
+
         // Check if latest consultation is in the past, if so set to null
         if (latestConsultationResponse && latestConsultationResponse.slot) {
           const consultationDate = new Date(latestConsultationResponse.slot.startTime);
@@ -97,7 +97,7 @@ const Dashboard = () => {
             setLatestConsultation(null);
           }
         }
-        
+
         setMonthlySummary(summaryResponse || null)
         setTrendsData(trendsResponse || null)
       } catch (error) {
@@ -126,23 +126,23 @@ const Dashboard = () => {
 
   // Prepare category spending data for donut chart
   const categoryColors = [
-    '#334eac', '#5b70c7', '#80b597', '#67a682', 
+    '#334eac', '#5b70c7', '#80b597', '#67a682',
     '#f5a038', '#d47602', '#17a2b8', '#117a8a',
     '#e74c3c', '#c0392b', '#9b59b6', '#8e44ad'
   ]
-  
+
   // Handle categoryBreakdown as either array or object
   const categoryData = Array.isArray(categoryBreakdown)
     ? categoryBreakdown.map((cat: any, index: number) => ({
-        name: cat.category || 'Unknown',
-        value: typeof cat.amount === 'number' ? cat.amount : parseFloat(cat.amount) || 0,
-        color: categoryColors[index % categoryColors.length],
-      }))
+      name: cat.category || 'Unknown',
+      value: typeof cat.amount === 'number' ? cat.amount : parseFloat(cat.amount) || 0,
+      color: categoryColors[index % categoryColors.length],
+    }))
     : Object.entries(categoryBreakdown).map(([key, value], index) => ({
-        name: key,
-        value: typeof value === 'number' ? value : parseFloat(value as string) || 0,
-        color: categoryColors[index % categoryColors.length],
-      }))
+      name: key,
+      value: typeof value === 'number' ? value : parseFloat(value as string) || 0,
+      color: categoryColors[index % categoryColors.length],
+    }))
 
   // Stat cards with monthly summary data
   const statCards = [
@@ -180,10 +180,17 @@ const Dashboard = () => {
     },
   ]
 
+
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-lg font-medium">Loading Dashboard...</p>
+      <div
+        className="flex items-center justify-center h-screen"
+        style={{ backgroundColor: 'var(--color-bg-secondary)' }}
+      >
+        <p style={{ color: 'var(--color-text-primary)' }}>
+          Loading Dashboard...
+        </p>
       </div>
     )
   }
@@ -251,8 +258,8 @@ const Dashboard = () => {
             <div className="flex gap-4 pb-4 overflow-x-auto md:hidden snap-x snap-mandatory scrollbar-hide">
               {statCards.map((card, index) => (
                 <div key={index} className="min-w-[280px] snap-center">
-                  <StatCard 
-                    {...card} 
+                  <StatCard
+                    {...card}
                     onEdit={card.title === 'BUDGET' ? () => setIsBudgetModalOpen(true) : undefined}
                   />
                 </div>
@@ -262,9 +269,9 @@ const Dashboard = () => {
             {/* Grid layout for larger screens */}
             <div className="hidden gap-6 md:grid md:grid-cols-2 lg:grid-cols-4">
               {statCards.map((card, index) => (
-                <StatCard 
-                  key={index} 
-                  {...card} 
+                <StatCard
+                  key={index}
+                  {...card}
                   onEdit={card.title === 'BUDGET' ? () => setIsBudgetModalOpen(true) : undefined}
                 />
               ))}
@@ -274,8 +281,8 @@ const Dashboard = () => {
           {/* Your Session Section */}
           {
             latestConsultation && <div className="mb-8">
-            <YourSession sessionDetails={latestConsultation}/>
-          </div>
+              <YourSession sessionDetails={latestConsultation} />
+            </div>
           }
 
           {/* Charts Section - Responsive Layout */}
