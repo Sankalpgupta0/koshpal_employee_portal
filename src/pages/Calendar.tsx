@@ -289,7 +289,7 @@ const Schedule = () => {
 
                   {/* Time Slots */}
                   <div className="relative">
-                    {['8 AM', '9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM'].map((timeSlot, timeIndex) => (
+                    {['12 AM','1 PM','2 PM','3 PM','4 PM','5 PM','6 PM','7 PM','8 PM','9 PM','10 PM', '11 PM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM'].map((timeSlot, timeIndex) => (
                       <div 
                         key={timeIndex}
                         className="grid grid-cols-8 border-b"
@@ -352,20 +352,20 @@ const Schedule = () => {
                                   className="p-2 mb-1 text-xs rounded"
                                   style={{ 
                                     backgroundColor: consultation.status === 'CONFIRMED' 
-                                      ? 'rgba(147, 197, 253, 0.3)' 
-                                      : 'rgba(251, 191, 36, 0.3)',
+                                      ? 'color-mix(in srgb, var(--color-primary) 15%, transparent)' 
+                                      : 'color-mix(in srgb, var(--color-warning) 20%, transparent)',
                                     border: consultation.status === 'CONFIRMED'
-                                      ? '1px solid rgba(59, 130, 246, 0.5)'
-                                      : '1px solid rgba(245, 158, 11, 0.5)'
+                                      ? '1px solid color-mix(in srgb, var(--color-primary) 40%, transparent)'
+                                      : '1px solid color-mix(in srgb, var(--color-warning) 50%, transparent)'
                                   }}
                                 >
                                   <div className="flex items-center gap-1 mb-0.5">
-                                    <Calendar className="w-3 h-3" style={{ color: '#334EAC' }} />
-                                    <span className="font-semibold" style={{ color: '#334EAC' }}>
+                                    <Calendar className="w-3 h-3" style={{ color: 'var(--color-primary)' }} />
+                                    <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>
                                       {consultation.coach.fullName}
                                     </span>
                                   </div>
-                                  <div className="text-xs" style={{ color: '#334EAC' }}>
+                                  <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                                     {consultation.coach.expertise.slice(0, 2).join(', ')}
                                   </div>
                                   {consultation.meetingLink && (
@@ -374,7 +374,7 @@ const Schedule = () => {
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="block mt-1 text-xs underline"
-                                      style={{ color: '#334EAC' }}
+                                      style={{ color: 'var(--color-primary)' }}
                                     >
                                       Join Meeting
                                     </a>
