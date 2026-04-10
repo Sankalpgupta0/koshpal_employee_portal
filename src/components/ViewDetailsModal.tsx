@@ -303,10 +303,10 @@ const ViewDetailsModal = ({
                 <Video className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
                 <div>
                   <p className="text-xs font-medium mb-0.5" style={{ color: 'var(--color-primary)' }}>
-                    Google Meet link sent to email
+                    Google Meet link is ready
                   </p>
                   <p className="text-xs" style={{ color: 'var(--color-primary)', opacity: 0.8 }}>
-                    Check your inbox for the meeting link
+                    You can join the session directly from your dashboard
                   </p>
                 </div>
               </div>

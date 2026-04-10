@@ -442,7 +442,7 @@ const BookingModal = ({
                   <div className="flex items-start gap-2">
                     <Check className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
                     <span className="text-sm" style={{ color: 'var(--color-primary)' }}>
-                      Calendar invite will be sent to both participant and advisor
+                      Session details will be visible in the dashboard for both sides
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
@@ -494,7 +494,7 @@ const BookingModal = ({
                 }}
               >
                 <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>
-                  Confirmation email sent to your registered address
+                  You can now find the meeting link in your dashboard
                 </p>
               </div>
             </div>

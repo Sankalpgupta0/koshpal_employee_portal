@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Menu, Moon, Sun, Settings as SettingsIcon, User, LogOut } from 'lucide-react'
+import { Menu, Moon, Sun, Settings as SettingsIcon, User, LogOut, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import { getMyProfile, updateMyProfile } from '../api/employee'
 import { axiosInstance } from '../api/axiosInstance'
 import Toast from '../components/Toast'
 import { analytics } from '../analytics'
+import { changePasswordEmployee } from '../api/employee'
 
 const Settings = () => {
   const navigate = useNavigate()
@@ -23,6 +24,18 @@ const Settings = () => {
     email: '',
     phone: '',
   })
+  
+  // Password change state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [passwordSaving, setPasswordSaving] = useState(false)
+
   const [originalData, setOriginalData] = useState({
     firstName: '',
     lastName: '',
@@ -154,7 +167,52 @@ const Settings = () => {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-const handleSaveChanges = async () => {
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setPasswordData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleUpdatePassword = async () => {
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setToast({ message: 'All password fields are required', type: 'error' })
+      return
+    }
+
+    if (passwordData.newPassword.length < 8) {
+      setToast({ message: 'New password must be at least 8 characters long', type: 'error' })
+      return
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setToast({ message: 'Passwords do not match', type: 'error' })
+      return
+    }
+
+    try {
+      setPasswordSaving(true)
+      await changePasswordEmployee(passwordData.currentPassword, passwordData.newPassword)
+      setToast({ message: 'Password changed successfully! You will be logged out.', type: 'success' })
+      
+      // Clear password fields
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      })
+
+      // Force logout after a short delay
+      setTimeout(() => {
+        handleLogout()
+      }, 2000)
+    } catch (error: any) {
+      const apiMessage = error.response?.data?.message || 'Failed to update password'
+      setToast({ message: Array.isArray(apiMessage) ? apiMessage[0] : apiMessage, type: 'error' })
+    } finally {
+      setPasswordSaving(false)
+    }
+  }
+
+  const handleSaveChanges = async () => {
   if (!formData.firstName.trim() || !formData.lastName.trim()) {
     setToast({ message: 'First name and last name are required', type: 'error' })
     return
@@ -534,6 +592,129 @@ const handleSaveChanges = async () => {
                 )}
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
+            </div>
+          </div>
+
+          {/* Security & Password Section */}
+          <div
+            className="rounded-lg p-6 sm:p-8 mt-6"
+            style={{
+              backgroundColor: 'var(--color-bg-card)',
+              border: '1px solid var(--color-border-primary)',
+            }}
+          >
+            <div className="flex items-center gap-3 mb-8">
+              <ShieldCheck
+                className="w-6 h-6"
+                style={{ color: 'var(--color-primary)' }}
+              />
+              <h2
+                className="text-lg font-bold"
+                style={{ color: 'var(--color-text-primary)' }}
+              >
+                Security
+              </h2>
+            </div>
+
+            <div className="space-y-6 max-w-2xl">
+              {/* Current Password */}
+              <div>
+                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                  Current Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    name="currentPassword"
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all pr-12"
+                    style={{
+                      backgroundColor: 'var(--color-input-bg)',
+                      borderColor: 'var(--color-input-border)',
+                      color: 'var(--color-input-text)',
+                    }}
+                  />
+                  <button
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    style={{ color: 'var(--color-text-tertiary)' }}
+                  >
+                    {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* New Password & Confirm Password Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      name="newPassword"
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordChange}
+                      className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all pr-12"
+                      style={{
+                        backgroundColor: 'var(--color-input-bg)',
+                        borderColor: 'var(--color-input-border)',
+                        color: 'var(--color-input-text)',
+                      }}
+                    />
+                    <button
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      style={{ color: 'var(--color-text-tertiary)' }}
+                    >
+                      {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                    Confirm New Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      name="confirmPassword"
+                      value={passwordData.confirmPassword}
+                      onChange={handlePasswordChange}
+                      className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all pr-12"
+                      style={{
+                        backgroundColor: 'var(--color-input-bg)',
+                        borderColor: 'var(--color-input-border)',
+                        color: 'var(--color-input-text)',
+                      }}
+                    />
+                    <button
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      style={{ color: 'var(--color-text-tertiary)' }}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={handleUpdatePassword}
+                  disabled={passwordSaving}
+                  className="px-6 py-3 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                >
+                  {passwordSaving && (
+                    <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'white' }} />
+                  )}
+                  Update Password
+                </button>
+              </div>
             </div>
           </div>
 

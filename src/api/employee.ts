@@ -26,6 +26,11 @@ export interface LoginResponse {
   user: Employee;
 }
 
+export interface ForgotPasswordResponse {
+  message: string;
+  token?: string;
+}
+
 export interface CreateEmployeeRequest {
   companyId: string;
   name?: string;
@@ -85,6 +90,58 @@ export const loginEmployee = async (credentials: LoginRequest): Promise<LoginRes
   } catch (error) {
     throw error;
   }
+};
+
+/**
+ * Request OTP for password reset
+ */
+export const forgotPasswordEmployee = async (email: string): Promise<{ message: string }> => {
+  const response = await axiosInstance.post('/auth/forgot-password', {
+    email,
+    portal: 'EMPLOYEE',
+  });
+  return response.data;
+};
+
+/**
+ * Verify OTP for password reset
+ */
+export const verifyOtpEmployee = async (
+  email: string,
+  otp: string,
+): Promise<{ message: string; tempToken: string }> => {
+  const response = await axiosInstance.post('/auth/verify-otp', {
+    email,
+    otp,
+  });
+  return response.data;
+};
+
+/**
+ * Reset password using temporary token from verifyOtp
+ */
+export const resetPasswordOtpEmployee = async (
+  tempToken: string,
+  newPassword: string,
+): Promise<{ message: string }> => {
+  const response = await axiosInstance.post(`/auth/reset-password/${tempToken}`, {
+    newPassword,
+  });
+  return response.data;
+};
+
+/**
+ * Change password for authenticated user
+ */
+export const changePasswordEmployee = async (
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ message: string }> => {
+  const response = await axiosInstance.patch('/auth/me/password', {
+    currentPassword,
+    newPassword,
+  });
+  return response.data;
 };
 
 /**
