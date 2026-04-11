@@ -210,3 +210,41 @@ export const deleteEmployee = async (employeeId: string) => {
   const response = await axiosInstance.delete(`/employee/${employeeId}`);
   return response.data;
 };
+
+/**
+ * REFLECTION MODULE
+ */
+
+/**
+ * Submit Employee Feedback
+ * POST /api/v1/sessions/:id/employee-feedback
+ */
+export const submitEmployeeFeedback = async (
+  sessionId: string,
+  rating: number,
+  feedbackText: string,
+) => {
+  const response = await axiosInstance.post(`/sessions/${sessionId}/employee-feedback`, {
+    rating,
+    feedbackText,
+  });
+  return response.data;
+};
+
+/**
+ * Get Employee Feedback
+ * GET /api/v1/sessions/:id/employee-feedback
+ */
+export const getEmployeeFeedback = async (sessionId: string) => {
+  const response = await axiosInstance.get(`/sessions/${sessionId}/employee-feedback`);
+  return response.data;
+};
+
+/**
+ * Get Shared Coach Note
+ * GET /api/v1/sessions/:id/coach-notes
+ */
+export const getSharedCoachNote = async (sessionId: string) => {
+  const response = await axiosInstance.get(`/sessions/${sessionId}/coach-notes`);
+  return response.data;
+};
