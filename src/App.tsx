@@ -7,6 +7,8 @@ import Finances from './pages/Finances'
 import Goals from './pages/Goals'
 import Transactions from './pages/Transactions'
 import Settings from './pages/Settings'
+import Login from './pages/Login'
+import ResetPassword from './pages/ResetPassword'
 import ProtectedRoute from './components/ProtectedRoute'
 import { ToastProvider } from './components/ToastContainer'
 import { usePageTracking } from './hooks/usePageTracking'
@@ -82,6 +84,8 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/login" element={<Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

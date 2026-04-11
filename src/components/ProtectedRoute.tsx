@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Navigate } from 'react-router-dom'
 import { axiosInstance } from '../api/axiosInstance'
 
 interface ProtectedRouteProps {
@@ -57,10 +58,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!isAuthenticated) {
-    // Redirect to central landing page login
-    const landingPageUrl = import.meta.env.VITE_LANDING_PAGE_URL || 'https://koshpal.com';
-    window.location.href = `${landingPageUrl}/login`;
-    return null;
+    // Redirect to local login page
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>
